@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoryModule } from './modules/category/category.module';
 import { CommentModule } from './modules/comment/comment.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
 import { PostModule } from './modules/post/post.module';
 import { PublicArchiveModule } from './modules/public-archive/public-archive.module';
@@ -30,6 +31,7 @@ import { PrismaModule } from './prisma/prisma.module';
     UserModule,
     PostModule,
     CommentModule,
+    DashboardModule,
     PublicPostModule,
     PublicCommentModule,
     PublicArchiveModule,
