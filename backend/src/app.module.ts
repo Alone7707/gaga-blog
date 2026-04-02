@@ -7,6 +7,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { PostModule } from './modules/post/post.module';
 import { PublicPostModule } from './modules/public-post/public-post.module';
+import { CategoryModule } from './modules/category/category.module';
+import { TagModule } from './modules/tag/tag.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -22,6 +24,8 @@ import { PrismaModule } from './prisma/prisma.module';
     UserModule,
     PostModule,
     PublicPostModule,
+    CategoryModule,
+    TagModule,
   ],
   controllers: [AppController],
 })
