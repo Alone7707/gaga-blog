@@ -64,6 +64,8 @@ pnpm prisma:generate
 
 ### 2. 执行数据库迁移
 
+首次执行迁移前，如果仓库里还没有 `.env`，脚本会自动从 `.env.example` 生成一份默认 `.env`。
+
 ```bash
 npm run prisma:migrate -- --name init
 ```
@@ -86,7 +88,7 @@ npm run dev
 pnpm dev
 ```
 
-> `predev` 会在 `dev` 之前自动执行一次 `prisma generate`，用于兜底修复 Prisma Client 缺失问题。
+> `predev` 会在 `dev` 之前自动检查 `.env`、必要时自动生成，再执行 `prisma generate`，用于兜底修复环境变量和 Prisma Client 缺失问题。
 
 默认访问地址：
 
