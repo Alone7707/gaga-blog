@@ -54,23 +54,39 @@ backend/
 npm install
 ```
 
-### 2. 生成 Prisma Client
+安装完成后会自动执行 `prisma generate`。此外，`dev` 启动前也会自动触发一次 `prisma generate`，用于兜底修复 Prisma Client 缺失问题。
+
+如果你希望手动生成，也可以执行：
 
 ```bash
-npm run prisma:generate
+pnpm prisma:generate
 ```
 
-### 3. 执行数据库迁移
+### 2. 执行数据库迁移
 
 ```bash
 npm run prisma:migrate -- --name init
 ```
 
-### 4. 启动开发环境
+如果你使用 `pnpm`，等价命令为：
+
+```bash
+pnpm prisma:migrate -- --name init
+```
+
+### 3. 启动开发环境
 
 ```bash
 npm run dev
 ```
+
+如果你使用 `pnpm`，等价命令为：
+
+```bash
+pnpm dev
+```
+
+> `predev` 会在 `dev` 之前自动执行一次 `prisma generate`，用于兜底修复 Prisma Client 缺失问题。
 
 默认访问地址：
 
