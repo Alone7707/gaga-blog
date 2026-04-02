@@ -4,7 +4,7 @@
 
 ## 当前范围
 
-本次覆盖第四个后端模块：**公开侧文章列表与详情接口**。当前累计已完成：**项目初始化与数据库基础层**、**鉴权与管理员初始化基础能力**、**文章模块骨架**、**公开侧文章查询模块**。
+本次覆盖第十个后端模块：**评论基础模块**。当前累计已完成：**项目初始化与数据库基础层**、**鉴权与管理员初始化基础能力**、**文章模块骨架**、**公开侧文章查询模块**、**分类管理模块**、**标签管理模块**、**公开归档模块**、**公开搜索模块**、**公开分类/标签聚合模块**、**评论基础模块**。
 
 已完成内容：
 
@@ -15,10 +15,12 @@
 - 落首版核心数据模型
 - 提供统一响应结构、异常过滤器、健康检查接口
 - 提供管理员初始化、登录、登出、当前登录态查询、密码修改接口
-- 提供管理员侧文章创建、列表、详情、更新接口
-- 提供公开侧文章列表、详情接口
-- 公开列表支持基础分页与关键词搜索
-- 公开接口仅返回已发布且公开可见的文章
+- 提供管理员侧文章创建、列表、详情、更新、发布、下线、归档、软删除接口
+- 提供公开侧文章列表、详情、归档、搜索、分类/标签聚合接口
+- 提供公开评论提交接口，支持匿名提交与单层回复校验
+- 提供后台评论列表、评论详情、评论审核接口
+- 评论公开展示仅返回已审核通过内容
+- 评论提交补充基础去重与父评论合法性校验
 - 提供基于 JWT + HttpOnly Cookie 的基础鉴权链路
 - 提供基础启动与数据库脚本
 
@@ -40,9 +42,11 @@ backend/
       comment/
       health/
       post/
+      public-archive/
+      public-comment/
       public-post/
-      search/
-      setting/
+      public-search/
+      public-taxonomy/
       tag/
       user/
     prisma/
@@ -153,29 +157,63 @@ pnpm dev
 - `POST /api/admin/posts`
 - `GET /api/admin/posts/:id`
 - `PATCH /api/admin/posts/:id`
+- `PATCH /api/admin/posts/:id/publish`
+- `PATCH /api/admin/posts/:id/unpublish`
+- `PATCH /api/admin/posts/:id/archive`
+- `DELETE /api/admin/posts/:id`
+
+### 管理员分类与标签接口
+
+- `GET /api/admin/categories`
+- `POST /api/admin/categories`
+- `PATCH /api/admin/categories/:id`
+- `GET /api/admin/tags`
+- `POST /api/admin/tags`
+- `PATCH /api/admin/tags/:id`
+
+### 管理员评论接口
+
+- `GET /api/admin/comments`
+- `GET /api/admin/comments/:id`
+- `POST /api/admin/comments/:id/approve`
+- `POST /api/admin/comments/:id/reject`
+- `POST /api/admin/comments/:id/spam`
 
 ### 公开文章接口
 
 - `GET /api/public/posts`
 - `GET /api/public/posts/:slug`
+- `GET /api/public/archives`
+- `GET /api/public/search`
+- `GET /api/public/categories`
+- `GET /api/public/categories/:slug/posts`
+- `GET /api/public/tags`
+- `GET /api/public/tags/:slug/posts`
 
-## 公开文章接口说明
+### 公开评论接口
 
-- 仅返回 `status = PUBLISHED` 且 `visibility = PUBLIC` 的文章
-- 仅返回 `publishedAt` 不为空且发布时间不晚于当前时间的文章
-- 列表接口支持 `page`、`pageSize`、`keyword` 参数
-- 详情接口通过 `slug` 查询
-- 接口响应继续复用全局统一响应结构
+- `GET /api/public/posts/:slug/comments`
+- `POST /api/public/posts/:slug/comments`
+
+## 评论模块说明
+
+- 公开评论提交无需登录，默认进入 `PENDING` 待审核状态
+- 公开评论列表仅返回 `APPROVED` 的顶层评论与已通过回复
+- 当前版本仅支持**单层回复**，回复目标必须是同文章下的顶层评论
+- 评论内容会先去除 HTML 标签，再做长度校验
+- 针对相同文章做了 10 分钟内重复内容的基础拦截，命中条件为相同邮箱或相同 IP 哈希
+- 后台可按状态、文章、关键词查询评论，并执行通过 / 驳回 / 标记垃圾评论
 
 ## 鉴权说明
 
 - 管理员初始化接口仅允许在系统还没有任何用户时执行一次
 - 登录成功后，服务端会通过 HttpOnly Cookie 写入 JWT
-- 当前版本采用基础 JWT 方案，后续可在此基础上补充 refresh token、角色守卫与审计日志
+- 评论后台审核接口走现有管理员鉴权
 - 密码采用带盐哈希存储，不会在接口响应中返回明文或哈希值
 
 ## 说明
 
-- 本次未发生 Prisma schema 变更，因此无需新增迁移
+- 本次评论模块未发生 Prisma schema 变更，因此无需新增 migration
 - SQLite 数据文件已加入忽略规则，不进入版本库
 - 代码注释统一使用中文，便于后续协作维护
+- 当前环境若 PowerShell 无法直接识别 `npm`，可改用 `cmd /c npm run build` 进行构建校验
