@@ -1,5 +1,5 @@
-﻿<script setup lang="ts">
-import { computed } from 'vue'
+<script setup lang="ts">
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '../../stores/auth'
@@ -8,15 +8,59 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-// 登录页先用本地占位动作模拟登录成功跳转，后续直接替换为真实接口。
+const formState = reactive({
+  username: '',
+  password: '',
+})
+const errorMessage = ref('')
+const submitting = ref(false)
+
+// 登录成功后优先回跳原访问页，避免用户丢失访问上下文。
 const redirectPath = computed(() => {
   const redirect = route.query.redirect
   return typeof redirect === 'string' && redirect.startsWith('/admin') ? redirect : '/admin'
 })
 
-function handleLogin() {
-  authStore.login()
-  router.push(redirectPath.value)
+// 提交登录表单时先做最小校验，再调用 store 内统一封装的登录动作。
+async function handleLogin() {
+  if (submitting.value) {
+    return
+  }
+
+  if (!formState.username.trim() || !formState.password.trim()) {
+    errorMessage.value = '请输入用户名和密码'
+    return
+  }
+
+  errorMessage.value = ''
+  submitting.value = true
+
+  try {
+    await authStore.login({
+      username: formState.username.trim(),
+      password: formState.password,
+    })
+    await router.replace(redirectPath.value)
+  }
+  catch (error) {
+    errorMessage.value = resolveErrorMessage(error)
+  }
+  finally {
+    submitting.value = false
+  }
+}
+
+// 将接口错误收敛为可直接展示的中文提示，避免页面出现原始异常对象。
+function resolveErrorMessage(error: unknown) {
+  if (typeof error === 'object' && error && 'message' in error) {
+    const message = Reflect.get(error, 'message')
+
+    if (typeof message === 'string' && message) {
+      return message
+    }
+  }
+
+  return '登录失败，请稍后重试'
 }
 </script>
 
@@ -30,38 +74,47 @@ function handleLogin() {
         博客后台登录
       </h1>
       <p class="mt-4 text-sm text-slate-300 leading-7">
-        当前为登录页占位实现，用于打通后台访问链路与路由守卫。后续接入真实鉴权接口后替换表单提交逻辑即可。
+        当前已接入后台鉴权接口。登录成功后会写入服务端 Cookie，并在刷新后通过当前用户接口恢复登录态。
       </p>
 
-      <div class="mt-8 space-y-5">
+      <form class="mt-8 space-y-5" @submit.prevent="handleLogin">
         <label class="block">
           <span class="mb-2 block text-sm text-slate-300">用户名</span>
           <input
+            v-model="formState.username"
             type="text"
-            value="admin"
-            readonly
-            class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none"
+            autocomplete="username"
+            placeholder="请输入管理员用户名"
+            class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70"
           >
         </label>
 
         <label class="block">
           <span class="mb-2 block text-sm text-slate-300">密码</span>
           <input
+            v-model="formState.password"
             type="password"
-            value="********"
-            readonly
-            class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none"
+            autocomplete="current-password"
+            placeholder="请输入管理员密码"
+            class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70"
           >
         </label>
 
-        <button
-          type="button"
-          class="w-full rounded-4 bg-cyan-400 px-4 py-3 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300"
-          @click="handleLogin"
+        <p
+          v-if="errorMessage"
+          class="rounded-4 border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
         >
-          进入后台占位页
+          {{ errorMessage }}
+        </p>
+
+        <button
+          type="submit"
+          class="w-full rounded-4 bg-cyan-400 px-4 py-3 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-cyan-300/60"
+          :disabled="submitting"
+        >
+          {{ submitting ? '登录中...' : '登录后台' }}
         </button>
-      </div>
+      </form>
     </div>
   </div>
 </template>

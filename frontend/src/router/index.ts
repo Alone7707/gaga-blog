@@ -1,4 +1,4 @@
-﻿import {
+import {
   createRouter as createVueRouter,
   createWebHistory,
   type RouteLocationNormalized,
@@ -89,8 +89,10 @@ export function createRouter() {
     },
   })
 
-  router.beforeEach((to) => {
+  router.beforeEach(async (to) => {
     const authStore = useAuthStore()
+
+    await authStore.ensureSessionChecked()
 
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
       return {

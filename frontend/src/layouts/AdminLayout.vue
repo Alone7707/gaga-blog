@@ -1,10 +1,17 @@
-﻿<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+<script setup lang="ts">
+import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import { adminNavigation } from '../constants/navigation'
 import { useAuthStore } from '../stores/auth'
 
+const router = useRouter()
 const authStore = useAuthStore()
+
+// 退出后台时同步清理服务端 Cookie 与前端缓存，并返回登录页。
+async function handleLogout() {
+  await authStore.logout()
+  await router.replace('/admin/login')
+}
 </script>
 
 <template>
@@ -19,7 +26,7 @@ const authStore = useAuthStore()
             内容后台
           </h2>
           <p class="mt-3 text-sm text-slate-400 leading-6">
-            当前为后台基础布局占位，后续模块将在这里接入真实内容管理能力。
+            当前已接入基础登录态。后续业务模块可以直接复用这里的鉴权状态与退出能力。
           </p>
         </div>
 
@@ -60,9 +67,9 @@ const authStore = useAuthStore()
             <button
               type="button"
               class="rounded-full bg-white/10 px-4 py-2 text-sm text-slate-100 transition hover:bg-white/16"
-              @click="authStore.logout"
+              @click="handleLogout"
             >
-              退出占位
+              退出登录
             </button>
           </div>
         </header>
