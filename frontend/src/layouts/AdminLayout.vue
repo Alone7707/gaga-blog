@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import { adminNavigation } from '../constants/navigation'
 import { useAuthStore } from '../stores/auth'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -26,7 +27,7 @@ async function handleLogout() {
             内容后台
           </h2>
           <p class="mt-3 text-sm text-slate-400 leading-6">
-            当前已接入基础登录态。后续业务模块可以直接复用这里的鉴权状态与退出能力。
+            当前已接入基础登录态。文章管理模块已落地最小可用版本，后续页面可以继续沿这套壳层扩展。
           </p>
         </div>
 
@@ -36,6 +37,9 @@ async function handleLogout() {
             :key="item.to"
             :to="item.to"
             class="block rounded-4 px-4 py-3 text-sm text-slate-300 transition hover:bg-cyan-400/10 hover:text-white"
+            :class="route.path === item.to || route.path.startsWith(`${item.to}/`)
+              ? 'bg-cyan-400/12 text-white ring-1 ring-cyan-300/20'
+              : ''"
           >
             {{ item.label }}
           </RouterLink>
@@ -60,7 +64,13 @@ async function handleLogout() {
               博客后台管理
             </h1>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <RouterLink
+              to="/admin/posts/new"
+              class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300"
+            >
+              新建文章
+            </RouterLink>
             <span class="rounded-full border border-cyan-300/30 px-4 py-2 text-sm text-cyan-200">
               {{ authStore.profile?.displayName ?? '站点管理员' }}
             </span>

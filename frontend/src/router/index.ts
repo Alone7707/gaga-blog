@@ -9,6 +9,8 @@ import AdminLayout from '../layouts/AdminLayout.vue'
 import PublicLayout from '../layouts/PublicLayout.vue'
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.vue'
 import AdminLoginPage from '../pages/admin/AdminLoginPage.vue'
+import AdminPostEditorPage from '../pages/admin/AdminPostEditorPage.vue'
+import AdminPostsPage from '../pages/admin/AdminPostsPage.vue'
 import HomePage from '../pages/public/HomePage.vue'
 import PostDetailPage from '../pages/public/PostDetailPage.vue'
 import { useAuthStore } from '../stores/auth'
@@ -66,6 +68,33 @@ const routes: RouteRecordRaw[] = [
         component: AdminDashboardPage,
         meta: {
           title: '仪表盘',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'posts',
+        name: 'admin-posts',
+        component: AdminPostsPage,
+        meta: {
+          title: '文章管理',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'posts/new',
+        name: 'admin-post-create',
+        component: AdminPostEditorPage,
+        meta: {
+          title: '新建文章',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'posts/:id/edit',
+        name: 'admin-post-edit',
+        component: AdminPostEditorPage,
+        meta: {
+          title: '编辑文章',
           requiresAuth: true,
         },
       },
