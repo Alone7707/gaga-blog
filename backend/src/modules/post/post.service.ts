@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import {
   PostStatus,
@@ -14,6 +15,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { ListPostQueryDto } from './dto/list-post-query.dto';
+import { PublishPostDto } from './dto/publish-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
 type PostDetailPayload = Prisma.PostGetPayload<{
@@ -247,6 +249,123 @@ export class PostService {
     return this.toPostDetail(updated);
   }
 
+  // 发布接口显式收口为单独动作，便于后台状态流转按钮直接调用。
+  async publishPost(id: string, dto: PublishPostDto) {
+    const post = await this.findActivePostById(id);
+
+    this.ensurePostCanBePublished(post);
+
+    const updated = await this.prismaService.post.update({
+      where: { id },
+      data: {
+        status: PostStatus.PUBLISHED,
+        publishedAt: dto.publishedAt ? new Date(dto.publishedAt) : new Date(),
+      },
+      include: POST_DETAIL_INCLUDE,
+    });
+
+    return this.toPostDetail(updated);
+  }
+
+  // 下线后回退为草稿，并清空发布时间，确保公开侧立即不可见。
+  async unpublishPost(id: string) {
+    const post = await this.findActivePostById(id);
+
+    if (post.status !== PostStatus.PUBLISHED) {
+      throw new ConflictException({
+        code: 'POST_STATUS_INVALID',
+        message: '仅已发布文章支持下线',
+      });
+    }
+
+    const updated = await this.prismaService.post.update({
+      where: { id },
+      data: {
+        status: PostStatus.DRAFT,
+        publishedAt: null,
+      },
+      include: POST_DETAIL_INCLUDE,
+    });
+
+    return this.toPostDetail(updated);
+  }
+
+  // 归档动作独立保留，便于后台区分“待继续编辑”和“历史沉淀”两类文章。
+  async archivePost(id: string) {
+    const post = await this.findActivePostById(id);
+
+    if (post.status === PostStatus.ARCHIVED) {
+      throw new ConflictException({
+        code: 'POST_STATUS_INVALID',
+        message: '文章已归档，请勿重复操作',
+      });
+    }
+
+    const updated = await this.prismaService.post.update({
+      where: { id },
+      data: {
+        status: PostStatus.ARCHIVED,
+        publishedAt: null,
+      },
+      include: POST_DETAIL_INCLUDE,
+    });
+
+    return this.toPostDetail(updated);
+  }
+
+  // 删除采用软删除，避免误操作导致文章内容无法恢复。
+  async softDeletePost(id: string) {
+    const post = await this.findActivePostById(id);
+
+    const updated = await this.prismaService.post.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        publishedAt: null,
+      },
+      include: POST_DETAIL_INCLUDE,
+    });
+
+    return this.toPostDetail(updated);
+  }
+
+  private async findActivePostById(id: string) {
+    const post = await this.prismaService.post.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      include: {
+        postTags: true,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException({
+        code: 'POST_NOT_FOUND',
+        message: '文章不存在',
+      });
+    }
+
+    return post;
+  }
+
+  private ensurePostCanBePublished(post: { title: string; contentMarkdown: string; status: PostStatus }) {
+    if (post.status === PostStatus.PUBLISHED) {
+      throw new ConflictException({
+        code: 'POST_STATUS_INVALID',
+        message: '文章已发布，请勿重复操作',
+      });
+    }
+
+    if (!post.title.trim() || !post.contentMarkdown.trim()) {
+      throw new UnprocessableEntityException({
+        code: 'POST_PUBLISH_INVALID',
+        message: '文章标题和正文不能为空，无法发布',
+      });
+    }
+  }
+
   private async ensureCategoryExists(categoryId?: string): Promise<void> {
     if (categoryId === undefined) {
       return;
@@ -422,6 +541,7 @@ export class PostService {
       title: post.title,
       slug: post.slug,
       summary: post.summary,
+      deletedAt: post.deletedAt,
       contentMarkdown: post.contentMarkdown,
       contentHtml: post.contentHtml,
       coverImage: post.coverImage,
