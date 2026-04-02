@@ -54,6 +54,12 @@ backend/
 npm install
 ```
 
+如果你使用的是 `pnpm`：
+
+```bash
+pnpm install
+```
+
 安装完成后会自动执行 `prisma generate`。此外，`dev` 启动前也会自动触发一次 `prisma generate`，用于兜底修复 Prisma Client 缺失问题。
 
 如果你希望手动生成，也可以执行：
@@ -87,6 +93,8 @@ npm run dev
 ```bash
 pnpm dev
 ```
+
+> 如果刚刚拉取了新代码，且 `package.json` 发生变化，请先重新执行一次 `pnpm install` 再启动。
 
 > `predev` 会在 `dev` 之前自动检查 `.env`、必要时自动生成，再执行 `prisma generate`，用于兜底修复环境变量和 Prisma Client 缺失问题。
 
