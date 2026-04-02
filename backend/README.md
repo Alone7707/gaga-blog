@@ -4,7 +4,7 @@
 
 ## 当前范围
 
-本次覆盖前三个后端模块：**项目初始化与数据库基础层**、**鉴权与管理员初始化基础能力**、**文章模块骨架**。
+本次覆盖第四个后端模块：**公开侧文章列表与详情接口**。当前累计已完成：**项目初始化与数据库基础层**、**鉴权与管理员初始化基础能力**、**文章模块骨架**、**公开侧文章查询模块**。
 
 已完成内容：
 
@@ -16,6 +16,9 @@
 - 提供统一响应结构、异常过滤器、健康检查接口
 - 提供管理员初始化、登录、登出、当前登录态查询、密码修改接口
 - 提供管理员侧文章创建、列表、详情、更新接口
+- 提供公开侧文章列表、详情接口
+- 公开列表支持基础分页与关键词搜索
+- 公开接口仅返回已发布且公开可见的文章
 - 提供基于 JWT + HttpOnly Cookie 的基础鉴权链路
 - 提供基础启动与数据库脚本
 
@@ -37,6 +40,7 @@ backend/
       comment/
       health/
       post/
+      public-post/
       search/
       setting/
       tag/
@@ -127,7 +131,7 @@ pnpm dev
 - `PostVisibility`
 - `CommentStatus`
 
-## 已提供的鉴权接口
+## 已提供的接口
 
 ### 初始化管理员
 
@@ -143,12 +147,25 @@ pnpm dev
 
 - `PATCH /api/admin/users/password`
 
-### 文章接口
+### 管理员文章接口
 
 - `GET /api/admin/posts`
 - `POST /api/admin/posts`
 - `GET /api/admin/posts/:id`
 - `PATCH /api/admin/posts/:id`
+
+### 公开文章接口
+
+- `GET /api/public/posts`
+- `GET /api/public/posts/:slug`
+
+## 公开文章接口说明
+
+- 仅返回 `status = PUBLISHED` 且 `visibility = PUBLIC` 的文章
+- 仅返回 `publishedAt` 不为空且发布时间不晚于当前时间的文章
+- 列表接口支持 `page`、`pageSize`、`keyword` 参数
+- 详情接口通过 `slug` 查询
+- 接口响应继续复用全局统一响应结构
 
 ## 鉴权说明
 
@@ -159,6 +176,6 @@ pnpm dev
 
 ## 说明
 
-- 当前阶段尚未开始文章 CRUD、评论审核等业务接口开发
+- 本次未发生 Prisma schema 变更，因此无需新增迁移
 - SQLite 数据文件已加入忽略规则，不进入版本库
 - 代码注释统一使用中文，便于后续协作维护

@@ -41,6 +41,19 @@ type PostListItemPayload = Prisma.PostGetPayload<{
   };
 }>;
 
+const POST_DETAIL_INCLUDE = {
+  author: true,
+  category: true,
+  postTags: {
+    include: {
+      tag: true,
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  },
+} satisfies Prisma.PostInclude;
+
 interface UserProfileLike {
   id: string;
   username: string;
@@ -136,7 +149,7 @@ export class PostService {
         categoryId: dto.categoryId?.trim() || null,
         postTags: this.buildTagRelations(dto.tagIds),
       },
-      include: this.getPostDetailInclude(),
+      include: POST_DETAIL_INCLUDE,
     });
 
     return this.toPostDetail(created);
@@ -149,7 +162,7 @@ export class PostService {
         id,
         deletedAt: null,
       },
-      include: this.getPostDetailInclude(),
+      include: POST_DETAIL_INCLUDE,
     });
 
     if (!post) {
@@ -228,7 +241,7 @@ export class PostService {
             }
           : {}),
       },
-      include: this.getPostDetailInclude(),
+      include: POST_DETAIL_INCLUDE,
     });
 
     return this.toPostDetail(updated);
@@ -373,21 +386,6 @@ export class PostService {
 
     return {
       create: normalizedTagIds.map((tagId) => ({ tagId })),
-    };
-  }
-
-  private getPostDetailInclude(): Prisma.PostInclude {
-    return {
-      author: true,
-      category: true,
-      postTags: {
-        include: {
-          tag: true,
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
-      },
     };
   }
 
