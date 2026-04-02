@@ -1,14 +1,15 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
-import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { UserModule } from './modules/user/user.module';
+import { CategoryModule } from './modules/category/category.module';
+import { HealthModule } from './modules/health/health.module';
 import { PostModule } from './modules/post/post.module';
 import { PublicPostModule } from './modules/public-post/public-post.module';
-import { CategoryModule } from './modules/category/category.module';
+import { PublicTaxonomyModule } from './modules/public-taxonomy/public-taxonomy.module';
 import { TagModule } from './modules/tag/tag.module';
+import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { PrismaModule } from './prisma/prisma.module';
     UserModule,
     PostModule,
     PublicPostModule,
+    PublicTaxonomyModule,
     CategoryModule,
     TagModule,
   ],
