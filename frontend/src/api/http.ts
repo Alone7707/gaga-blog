@@ -16,7 +16,7 @@ interface ApiErrorPayload {
 
 // 统一创建管理端请求实例，后续后台接口可直接复用 withCredentials 与错误处理。
 const http = axios.create({
-  baseURL: '/',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/',
   timeout: 10000,
   withCredentials: true,
 })

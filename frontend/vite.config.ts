@@ -12,4 +12,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      // 本地开发时把 /api 请求转发到后端，避免前端开发服务器直接返回 404。
+      '/api': {
+        target: process.env.VITE_DEV_API_TARGET || 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
 })
