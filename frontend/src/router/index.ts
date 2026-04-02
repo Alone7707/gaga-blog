@@ -7,10 +7,12 @@ import {
 
 import AdminLayout from '../layouts/AdminLayout.vue'
 import PublicLayout from '../layouts/PublicLayout.vue'
+import AdminCategoriesPage from '../pages/admin/AdminCategoriesPage.vue'
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.vue'
 import AdminLoginPage from '../pages/admin/AdminLoginPage.vue'
 import AdminPostEditorPage from '../pages/admin/AdminPostEditorPage.vue'
 import AdminPostsPage from '../pages/admin/AdminPostsPage.vue'
+import AdminTagsPage from '../pages/admin/AdminTagsPage.vue'
 import HomePage from '../pages/public/HomePage.vue'
 import PostDetailPage from '../pages/public/PostDetailPage.vue'
 import { useAuthStore } from '../stores/auth'
@@ -95,6 +97,24 @@ const routes: RouteRecordRaw[] = [
         component: AdminPostEditorPage,
         meta: {
           title: '编辑文章',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'categories',
+        name: 'admin-categories',
+        component: AdminCategoriesPage,
+        meta: {
+          title: '分类管理',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'tags',
+        name: 'admin-tags',
+        component: AdminTagsPage,
+        meta: {
+          title: '标签管理',
           requiresAuth: true,
         },
       },
