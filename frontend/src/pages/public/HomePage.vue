@@ -1,74 +1,66 @@
-﻿<script setup lang="ts">
-import { RouterLink } from 'vue-router'
+<script setup lang="ts">
+import { computed, ref } from 'vue'
 
 import SectionCard from '../../components/common/SectionCard.vue'
+import PostCard from '../../components/public/PostCard.vue'
+import { articleList, featuredPosts } from '../../mock/posts'
 
-// 首页占位数据用于验证前台布局和信息层级是否合理。
-const featuredPosts = [
-  {
-    title: '欢迎来到开源博客产品',
-    slug: 'hello-open-blog',
-    summary: '这是首页第一篇占位文章，用于承接后续文章列表与详情接口联调。',
-    meta: '产品规划 · 5 分钟阅读',
-  },
-  {
-    title: '前端模块拆解如何落到代码结构',
-    slug: 'frontend-module-setup',
-    summary: '当前版本先把壳层、布局、路由和目录结构建立清楚，确保后续模块能按边界自然扩展。',
-    meta: '工程设计 · 7 分钟阅读',
-  },
-  {
-    title: '后台与前台双布局的初始思路',
-    slug: 'dual-layout-notes',
-    summary: '前台聚焦阅读体验，后台聚焦高频内容操作，两者需要共享基础设施但保持边界清晰。',
-    meta: '架构说明 · 4 分钟阅读',
-  },
-]
+// 首页先用本地数据模拟分页容量，后续接接口时直接替换数据源。
+const visibleCount = ref(4)
+
+const visiblePosts = computed(() => articleList.slice(0, visibleCount.value))
+const hasMorePosts = computed(() => visibleCount.value < articleList.length)
+
+// 当前阶段保留“加载更多”占位交互，避免后续改动布局结构。
+function loadMorePosts() {
+  visibleCount.value = Math.min(visibleCount.value + 2, articleList.length)
+}
 </script>
 
 <template>
-  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-    <div class="space-y-6">
-      <SectionCard title="前台首页" description="这里是博客产品的前台入口，当前先呈现 Hero 区和文章卡片骨架，后续接入真实接口后即可替换占位数据。">
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <article
-            v-for="post in featuredPosts"
-            :key="post.slug"
-            class="rounded-6 border border-white/10 bg-slate-950/30 p-5 transition hover:border-cyan-300/50 hover:-translate-y-1"
-          >
-            <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/80">
-              {{ post.meta }}
-            </p>
-            <h3 class="mt-4 text-xl text-white font-semibold leading-8">
-              {{ post.title }}
-            </h3>
-            <p class="mt-3 text-sm text-slate-300 leading-7">
-              {{ post.summary }}
-            </p>
-            <RouterLink :to="`/posts/${post.slug}`" class="mt-6 inline-flex items-center text-sm text-cyan-300 hover:text-cyan-200">
-              查看详情 →
-            </RouterLink>
-          </article>
-        </div>
-      </SectionCard>
-    </div>
+  <div class="space-y-6">
+    <SectionCard title="首页精选" description="使用 mock 数据先完成首页推荐区和文章列表主链路。">
+      <div class="grid gap-4 md:grid-cols-2">
+        <article
+          v-for="post in featuredPosts"
+          :key="post.slug"
+          class="rounded-6 border border-white/10 bg-slate-950/30 p-5"
+        >
+          <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/80">
+            {{ post.pinnedLabel || '精选内容' }}
+          </p>
+          <h3 class="mt-4 text-xl text-white font-semibold leading-8">
+            {{ post.title }}
+          </h3>
+          <p class="mt-3 text-sm text-slate-300 leading-7">
+            {{ post.summary }}
+          </p>
+        </article>
+      </div>
+    </SectionCard>
 
-    <div class="space-y-6">
-      <SectionCard title="当前阶段范围" description="按照文档要求，第一模块只完成项目初始化、布局和路由骨架，不提前侵入真实业务逻辑。">
-        <ul class="space-y-3 text-sm text-slate-300 leading-7">
-          <li>• 前台布局：Hero、导航、页脚、首页内容区。</li>
-          <li>• 路由骨架：首页、文章详情、后台登录、后台仪表盘。</li>
-          <li>• 技术底座：Vue Router、Pinia、UnoCSS、目录分层。</li>
-        </ul>
-      </SectionCard>
+    <SectionCard title="最新文章" description="文章列表由本地 mock 数据驱动，满足当前模块自测与后续联调准备。">
+      <div class="space-y-4">
+        <PostCard
+          v-for="post in visiblePosts"
+          :key="post.slug"
+          :post="post"
+        />
+      </div>
 
-      <SectionCard title="后续接入点" description="下一阶段可以直接在现有结构上补首页列表接口、文章详情接口和后台鉴权逻辑。">
-        <div class="space-y-3 text-sm text-slate-300 leading-7">
-          <p>1. `src/api`：增加文章与登录接口封装。</p>
-          <p>2. `src/stores`：补齐文章、站点配置等状态管理。</p>
-          <p>3. `src/pages`：逐页替换占位内容为真实联调页面。</p>
-        </div>
-      </SectionCard>
-    </div>
+      <div class="mt-6 flex items-center justify-between gap-4 rounded-6 border border-dashed border-white/10 bg-slate-950/20 p-4">
+        <p class="text-sm text-slate-300 leading-6">
+          当前先保留加载更多占位，后续可替换为真实分页接口。
+        </p>
+        <button
+          type="button"
+          class="rounded-full border border-cyan-300/30 px-4 py-2 text-sm text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:border-white/10 disabled:text-slate-500"
+          :disabled="!hasMorePosts"
+          @click="loadMorePosts"
+        >
+          {{ hasMorePosts ? '加载更多' : '已展示全部' }}
+        </button>
+      </div>
+    </SectionCard>
   </div>
 </template>
