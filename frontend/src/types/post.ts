@@ -87,6 +87,21 @@ export interface AdminPostDetail {
   tags: PostTag[]
 }
 
+export interface AdminPostEditorPayload {
+  title: string
+  slug?: string
+  summary?: string
+  contentMarkdown: string
+  contentHtml?: string
+  status?: PostStatus
+  visibility?: PostVisibility
+  seoTitle?: string
+  seoDescription?: string
+  publishedAt?: string
+  categoryId?: string
+  tagIds?: string[]
+}
+
 export interface AdminPostListPagination {
   page: number
   pageSize: number
@@ -108,5 +123,9 @@ export interface AdminPostListQuery {
 }
 
 export interface AdminPostDetailResponse {
+  post: AdminPostDetail
+}
+
+export interface AdminPostSaveResponse {
   post: AdminPostDetail
 }
