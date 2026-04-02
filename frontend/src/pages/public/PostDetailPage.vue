@@ -1,137 +1,88 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import MarkdownIt from 'markdown-it'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import PostCard from '../../components/public/PostCard.vue'
-import { getPostBySlug, getRelatedPosts } from '../../mock/posts'
+import { getPublicPostDetail } from '../../api/public'
+import type { PublicPostDetailResponse } from '../../types/public'
+import { formatPublicDate } from '../../utils/public-post'
 
 const route = useRoute()
+const markdown = new MarkdownIt({
+  html: false,
+  linkify: true,
+  breaks: true,
+})
 
-// 详情页统一从路由参数取 slug，后续接接口时可直接复用这个入口。
+const loading = ref(false)
+const errorMessage = ref('')
+const currentPost = ref<PublicPostDetailResponse | null>(null)
+
+// 详情页统一从路由参数取 slug，后续继续扩展 SEO 或相关文章时可直接复用。
 const slug = computed(() => String(route.params.slug ?? ''))
 
-// 当前文章详情数据，未来可替换为接口返回的标准结构。
-const currentPost = computed(() => getPostBySlug(slug.value))
-
-// 相关文章区域先基于 mock 数据联动，后续可替换为独立推荐接口。
-const relatedPosts = computed(() => {
+// 优先使用服务端已生成的 HTML；若为空，则回退 Markdown 渲染结果。
+const renderedContent = computed(() => {
   if (!currentPost.value) {
-    return []
+    return ''
   }
 
-  return getRelatedPosts(currentPost.value)
+  if (currentPost.value.contentHtml?.trim()) {
+    return currentPost.value.contentHtml
+  }
+
+  return markdown.render(currentPost.value.contentMarkdown)
 })
+
+async function loadPostDetail() {
+  if (!slug.value) {
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    currentPost.value = await getPublicPostDetail(slug.value)
+  }
+  catch (error) {
+    currentPost.value = null
+    errorMessage.value = error instanceof Error ? error.message : '文章详情加载失败'
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadPostDetail()
+})
+
+watch(
+  () => route.params.slug,
+  () => {
+    loadPostDetail()
+  },
+)
 </script>
 
 <template>
   <div class="space-y-6">
-    <section
-      v-if="currentPost"
-      class="overflow-hidden rounded-8 border border-white/10 bg-white/6 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-md"
-    >
-      <div class="border-b border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(15,23,42,0.2))] px-6 py-8 md:px-8 md:py-10">
-        <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
-          {{ currentPost.coverLabel || '文章详情' }}
-        </p>
-        <h2 class="mt-4 max-w-4xl text-3xl font-semibold leading-tight text-white md:text-4xl">
-          {{ currentPost.title }}
-        </h2>
-        <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-200 md:text-base">
-          {{ currentPost.summary }}
-        </p>
-
-        <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-300">
-          <span class="rounded-full border border-cyan-300/25 bg-cyan-300/8 px-3 py-1 text-cyan-200">
-            {{ currentPost.category }}
-          </span>
-          <span>{{ currentPost.publishedAt }}</span>
-          <span class="text-white/20">•</span>
-          <span>{{ currentPost.readingTime }}</span>
-          <span class="text-white/20">•</span>
-          <span>作者：{{ currentPost.authorName }}</span>
-        </div>
-
-        <div class="mt-5 flex flex-wrap gap-2">
-          <span
-            v-for="tag in currentPost.tags"
-            :key="tag"
-            class="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-200"
-          >
-            # {{ tag }}
-          </span>
-        </div>
-      </div>
-
-      <div class="grid gap-6 px-6 py-6 md:px-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <article class="rounded-6 border border-white/8 bg-slate-950/35 p-6">
-          <div class="space-y-8">
-            <section
-              v-for="section in currentPost.contentSections"
-              :key="section.heading"
-              class="space-y-4"
-            >
-              <h3 class="text-2xl font-semibold text-white">
-                {{ section.heading }}
-              </h3>
-              <p
-                v-for="paragraph in section.paragraphs"
-                :key="paragraph"
-                class="text-sm leading-8 text-slate-300 md:text-base"
-              >
-                {{ paragraph }}
-              </p>
-            </section>
-          </div>
-        </article>
-
-        <aside class="space-y-4">
-          <section class="rounded-6 border border-white/8 bg-slate-950/35 p-5">
-            <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/80">
-              阅读辅助
-            </p>
-            <h3 class="mt-3 text-lg font-semibold text-white">
-              当前文章信息
-            </h3>
-            <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
-              <li>分类：{{ currentPost.category }}</li>
-              <li>发布时间：{{ currentPost.publishedAt }}</li>
-              <li>阅读时长：{{ currentPost.readingTime }}</li>
-              <li>内容段落：{{ currentPost.contentSections.length }} 个区块</li>
-            </ul>
-          </section>
-
-          <section class="rounded-6 border border-dashed border-white/10 bg-slate-950/20 p-5">
-            <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/80">
-              后续预留
-            </p>
-            <p class="mt-3 text-sm leading-7 text-slate-300">
-              这里后续可继续挂载 Markdown 渲染、目录导航、评论区或上一篇/下一篇模块，当前版本先保证详情页主阅读链路可用。
-            </p>
-          </section>
-
-          <RouterLink
-            to="/"
-            class="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 px-4 py-2 text-sm text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/10"
-          >
-            返回文章列表
-            <span aria-hidden="true">←</span>
-          </RouterLink>
-        </aside>
-      </div>
+    <section v-if="loading" class="rounded-8 border border-white/10 bg-white/6 p-8 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-md">
+      <p class="text-sm text-slate-300 leading-7">
+        正在加载文章详情...
+      </p>
     </section>
 
-    <section
-      v-else
-      class="rounded-8 border border-white/10 bg-white/6 p-8 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-md"
-    >
-      <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
+    <section v-else-if="errorMessage" class="rounded-8 border border-rose-400/25 bg-rose-400/8 p-8 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-md">
+      <p class="text-xs uppercase tracking-[0.28em] text-rose-100/80">
         文章不存在
       </p>
       <h2 class="mt-4 text-3xl font-semibold text-white">
         未找到对应文章
       </h2>
-      <p class="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-        当前 slug 为 {{ slug }}，本地 mock 数据中没有匹配文章。后续接真实接口后，这里可以替换为标准化的 404 或异常态处理。
+      <p class="mt-4 max-w-2xl text-sm leading-7 text-rose-50/90">
+        {{ errorMessage }}
       </p>
       <RouterLink
         to="/"
@@ -143,36 +94,83 @@ const relatedPosts = computed(() => {
     </section>
 
     <section
-      v-if="currentPost && relatedPosts.length"
-      class="rounded-8 border border-white/10 bg-white/6 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-md"
+      v-else-if="currentPost"
+      class="overflow-hidden rounded-8 border border-white/10 bg-white/6 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur-md"
     >
-      <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
-            Related Posts
-          </p>
-          <h2 class="mt-3 text-2xl font-semibold text-white">
-            相关文章
-          </h2>
-          <p class="mt-2 text-sm leading-6 text-slate-300">
-            当前先基于本地 mock 数据推荐，后续可切换为 /api/public/posts/:slug/related。
-          </p>
+      <div class="border-b border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(15,23,42,0.2))] px-6 py-8 md:px-8 md:py-10">
+        <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
+          公开文章详情
+        </p>
+        <h2 class="mt-4 max-w-4xl text-3xl font-semibold leading-tight text-white md:text-4xl">
+          {{ currentPost.title }}
+        </h2>
+        <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-200 md:text-base">
+          {{ currentPost.summary || '当前文章暂无摘要。' }}
+        </p>
+
+        <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+          <RouterLink
+            v-if="currentPost.category"
+            :to="`/categories/${currentPost.category.slug}`"
+            class="rounded-full border border-cyan-300/25 bg-cyan-300/8 px-3 py-1 text-cyan-200 transition hover:border-cyan-200"
+          >
+            {{ currentPost.category.name }}
+          </RouterLink>
+          <span>{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</span>
+          <span class="text-white/20">•</span>
+          <span>作者：{{ currentPost.author.displayName }}</span>
         </div>
-        <RouterLink
-          to="/"
-          class="inline-flex items-center gap-2 text-sm text-cyan-300 transition hover:text-cyan-200"
-        >
-          查看全部文章
-          <span aria-hidden="true">→</span>
-        </RouterLink>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+          <RouterLink
+            v-for="tag in currentPost.tags"
+            :key="tag.id"
+            :to="`/tags/${tag.slug}`"
+            class="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-200 transition hover:border-cyan-300/30 hover:text-cyan-100"
+          >
+            # {{ tag.name }}
+          </RouterLink>
+        </div>
       </div>
 
-      <div class="mt-6 grid gap-4 xl:grid-cols-3">
-        <PostCard
-          v-for="post in relatedPosts"
-          :key="post.slug"
-          :post="post"
-        />
+      <div class="grid gap-6 px-6 py-6 md:px-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+        <article class="prose prose-invert max-w-none rounded-6 border border-white/8 bg-slate-950/35 p-6">
+          <div v-html="renderedContent" />
+        </article>
+
+        <aside class="space-y-4">
+          <section class="rounded-6 border border-white/8 bg-slate-950/35 p-5">
+            <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/80">
+              阅读辅助
+            </p>
+            <h3 class="mt-3 text-lg font-semibold text-white">
+              当前文章信息
+            </h3>
+            <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+              <li>发布时间：{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</li>
+              <li>作者：{{ currentPost.author.displayName }}</li>
+              <li>分类：{{ currentPost.category?.name || '未分类' }}</li>
+              <li>标签数：{{ currentPost.tags.length }}</li>
+            </ul>
+          </section>
+
+          <section class="rounded-6 border border-dashed border-white/10 bg-slate-950/20 p-5">
+            <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/80">
+              浏览扩展
+            </p>
+            <p class="mt-3 text-sm leading-7 text-slate-300">
+              当前可继续从分类、标签和搜索页扩展浏览路径，满足公开前台最小阅读闭环。
+            </p>
+          </section>
+
+          <RouterLink
+            to="/"
+            class="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 px-4 py-2 text-sm text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/10"
+          >
+            返回文章列表
+            <span aria-hidden="true">←</span>
+          </RouterLink>
+        </aside>
       </div>
     </section>
   </div>

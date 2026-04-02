@@ -13,11 +13,16 @@ import AdminLoginPage from '../pages/admin/AdminLoginPage.vue'
 import AdminPostEditorPage from '../pages/admin/AdminPostEditorPage.vue'
 import AdminPostsPage from '../pages/admin/AdminPostsPage.vue'
 import AdminTagsPage from '../pages/admin/AdminTagsPage.vue'
+import CategoriesPage from '../pages/public/CategoriesPage.vue'
+import CategoryPostsPage from '../pages/public/CategoryPostsPage.vue'
 import HomePage from '../pages/public/HomePage.vue'
 import PostDetailPage from '../pages/public/PostDetailPage.vue'
+import SearchPage from '../pages/public/SearchPage.vue'
+import TagPostsPage from '../pages/public/TagPostsPage.vue'
+import TagsPage from '../pages/public/TagsPage.vue'
 import { useAuthStore } from '../stores/auth'
 
-// 定义应用路由骨架，后续模块在此基础上继续扩展。
+// 定义应用路由骨架，保持前台公开阅读链路和后台管理链路边界清晰。
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -41,6 +46,46 @@ const routes: RouteRecordRaw[] = [
         component: PostDetailPage,
         meta: {
           title: '文章详情',
+        },
+      },
+      {
+        path: 'categories',
+        name: 'public-categories',
+        component: CategoriesPage,
+        meta: {
+          title: '分类总览',
+        },
+      },
+      {
+        path: 'categories/:slug',
+        name: 'public-category-posts',
+        component: CategoryPostsPage,
+        meta: {
+          title: '分类文章',
+        },
+      },
+      {
+        path: 'tags',
+        name: 'public-tags',
+        component: TagsPage,
+        meta: {
+          title: '标签总览',
+        },
+      },
+      {
+        path: 'tags/:slug',
+        name: 'public-tag-posts',
+        component: TagPostsPage,
+        meta: {
+          title: '标签文章',
+        },
+      },
+      {
+        path: 'search',
+        name: 'public-search',
+        component: SearchPage,
+        meta: {
+          title: '公开搜索',
         },
       },
     ],
