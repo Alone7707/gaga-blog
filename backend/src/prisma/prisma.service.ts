@@ -10,8 +10,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
   async enableShutdownHooks(app: INestApplication): Promise<void> {
     // 统一处理 Prisma 连接释放，避免开发态热更新后连接残留。
-    this.$on('beforeExit', async () => {
-      await app.close();
-    });
+    app.enableShutdownHooks();
   }
 }

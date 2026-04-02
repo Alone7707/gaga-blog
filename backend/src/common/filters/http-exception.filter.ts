@@ -6,6 +6,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 
+interface ExceptionPayload {
+  code?: string;
+  message?: string | string[];
+  errors?: Array<Record<string, unknown>>;
+}
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -21,21 +27,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
 
-    const message =
-      typeof exceptionResponse === 'object' &&
-      exceptionResponse !== null &&
-      'message' in exceptionResponse
-        ? (exceptionResponse as { message: string | string[] }).message
-        : exception instanceof Error
-          ? exception.message
-          : '服务器内部错误';
+    const payload =
+      typeof exceptionResponse === 'object' && exceptionResponse !== null
+        ? (exceptionResponse as ExceptionPayload)
+        : null;
 
-    // 统一错误结构，避免后续模块各自返回不同格式。
+    const message =
+      payload?.message ??
+      (exception instanceof Error ? exception.message : '服务器内部错误');
+
+    // 统一错误结构，同时优先保留业务模块显式声明的错误码。
     response.status(status).send({
-      code: this.mapErrorCode(status),
+      code: payload?.code ?? this.mapErrorCode(status),
       message,
       data: null,
       requestId: request.id ?? `req_${Date.now()}`,
+      ...(payload?.errors ? { errors: payload.errors } : {}),
     });
   }
 

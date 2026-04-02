@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import cookie from '@fastify/cookie';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -15,6 +16,9 @@ async function bootstrap(): Promise<void> {
     AppModule,
     new FastifyAdapter(),
   );
+
+  // 注册 Cookie 插件，为 JWT HttpOnly Cookie 鉴权方案提供基础能力。
+  await app.register(cookie);
 
   app.setGlobalPrefix('api');
 
@@ -34,7 +38,12 @@ async function bootstrap(): Promise<void> {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('开源博客后端 API')
     .setDescription('开源博客产品后端初始化版本接口文档')
-    .setVersion('0.1.0')
+    .setVersion('0.2.0')
+    .addCookieAuth('blog_admin_token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'blog_admin_token',
+    })
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
