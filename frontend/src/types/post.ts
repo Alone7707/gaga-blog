@@ -1,3 +1,8 @@
+export interface PostSection {
+  heading: string
+  paragraphs: string[]
+}
+
 export interface PostItem {
   id: number
   slug: string
@@ -10,4 +15,8 @@ export interface PostItem {
   publishedAt: string
   featured: boolean
   pinnedLabel?: string
+  coverLabel?: string
+  authorName: string
+  relatedSlugs?: string[]
+  contentSections: PostSection[]
 }
