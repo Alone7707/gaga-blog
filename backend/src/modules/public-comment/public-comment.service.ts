@@ -10,18 +10,6 @@ import { createHash } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePublicCommentDto } from './dto/create-public-comment.dto';
 
-type PublicCommentPayload = Prisma.CommentGetPayload<{
-  include: {
-    replies: {
-      where: {
-        status: CommentStatus.APPROVED;
-      };
-      orderBy: {
-        createdAt: 'asc';
-      };
-    };
-  };
-}>;
 
 const PUBLIC_COMMENT_INCLUDE = {
   replies: {
@@ -33,6 +21,10 @@ const PUBLIC_COMMENT_INCLUDE = {
     },
   },
 } satisfies Prisma.CommentInclude;
+
+type PublicCommentPayload = Prisma.CommentGetPayload<{
+  include: typeof PUBLIC_COMMENT_INCLUDE;
+}>;
 
 interface CommentRequestContext {
   ip?: string;

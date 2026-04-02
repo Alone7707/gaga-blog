@@ -12,6 +12,7 @@ import { PublicCommentModule } from './modules/public-comment/public-comment.mod
 import { PublicPostModule } from './modules/public-post/public-post.module';
 import { PublicSearchModule } from './modules/public-search/public-search.module';
 import { PublicTaxonomyModule } from './modules/public-taxonomy/public-taxonomy.module';
+import { SettingModule } from './modules/setting/setting.module';
 import { TagModule } from './modules/tag/tag.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -36,6 +37,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PublicTaxonomyModule,
     CategoryModule,
     TagModule,
+    SettingModule,
   ],
   controllers: [AppController],
 })

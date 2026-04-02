@@ -8,39 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ListCommentQueryDto } from './dto/list-comment-query.dto';
 import { ReviewCommentDto } from './dto/review-comment.dto';
 
-type CommentListPayload = Prisma.CommentGetPayload<{
-  include: {
-    post: true;
-    parent: true;
-    reviewedBy: true;
-    replies: {
-      where: {
-        status: CommentStatus.APPROVED;
-      };
-    };
-    _count: {
-      select: {
-        replies: true;
-      };
-    };
-  };
-}>;
-
-type CommentDetailPayload = Prisma.CommentGetPayload<{
-  include: {
-    post: true;
-    parent: true;
-    reviewedBy: true;
-    replies: {
-      include: {
-        reviewedBy: true;
-      };
-      orderBy: {
-        createdAt: 'asc';
-      };
-    };
-  };
-}>;
+type ReviewableCommentStatus = 'APPROVED' | 'REJECTED' | 'SPAM';
 
 const COMMENT_LIST_INCLUDE = {
   post: true,
@@ -71,6 +39,14 @@ const COMMENT_DETAIL_INCLUDE = {
     },
   },
 } satisfies Prisma.CommentInclude;
+
+type CommentListPayload = Prisma.CommentGetPayload<{
+  include: typeof COMMENT_LIST_INCLUDE;
+}>;
+
+type CommentDetailPayload = Prisma.CommentGetPayload<{
+  include: typeof COMMENT_DETAIL_INCLUDE;
+}>;
 
 @Injectable()
 export class CommentService {

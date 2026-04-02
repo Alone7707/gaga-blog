@@ -1,0 +1,210 @@
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+
+import { PrismaService } from '../../prisma/prisma.service';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
+import {
+  normalizeSettingValue,
+  parseStoredSettingValue,
+  SETTING_DEFINITION_MAP,
+  SETTING_DEFINITIONS,
+  SETTING_GROUPS,
+} from './constants/setting-definitions';
+
+interface SettingRecordLike {
+  id: string;
+  group: string;
+  key: string;
+  value: string;
+  isPublic: boolean;
+  description: string | null;
+  updatedById: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+@Injectable()
+export class SettingService {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  // 后台读取返回完整白名单配置，并补齐尚未持久化的默认值。
+  async listAdminSettings(currentUser: AuthenticatedUser) {
+    this.ensureSuperAdmin(currentUser);
+
+    const settings = await this.prismaService.setting.findMany({
+      where: {
+        key: {
+          in: SETTING_DEFINITIONS.map((definition) => definition.key),
+        },
+      },
+      orderBy: [{ group: 'asc' }, { key: 'asc' }],
+    });
+
+    const settingMap = new Map(settings.map((item) => [item.key, item]));
+    const groups = SETTING_GROUPS.map((group) => this.buildGroupPayload(group, settingMap, false));
+
+    return {
+      groups,
+      items: groups.flatMap((group) => group.items),
+    };
+  }
+
+  // 单分组读取便于后台设置页按模块拆分加载。
+  async getAdminSettingsByGroup(group: string, currentUser: AuthenticatedUser) {
+    this.ensureSuperAdmin(currentUser);
+
+    const normalizedGroup = group.trim();
+
+    if (!SETTING_GROUPS.includes(normalizedGroup)) {
+      throw new NotFoundException({
+        code: 'SETTING_GROUP_NOT_FOUND',
+        message: '配置分组不存在',
+      });
+    }
+
+    const settings = await this.prismaService.setting.findMany({
+      where: { group: normalizedGroup },
+      orderBy: [{ key: 'asc' }],
+    });
+
+    const settingMap = new Map(settings.map((item) => [item.key, item]));
+
+    return this.buildGroupPayload(normalizedGroup, settingMap, false);
+  }
+
+  // 批量更新统一走事务与 upsert，保证后台最小可交付可直接落库。
+  async updateSettings(currentUser: AuthenticatedUser, dto: UpdateSettingsDto) {
+    this.ensureSuperAdmin(currentUser);
+
+    const deduplicatedItems = Array.from(
+      new Map(dto.items.map((item) => [item.key.trim(), item])).values(),
+    );
+
+    await this.prismaService.$transaction(
+      deduplicatedItems.map((item) => {
+        const key = item.key.trim();
+        const definition = SETTING_DEFINITION_MAP.get(key);
+
+        if (!definition) {
+          throw new NotFoundException({
+            code: 'SETTING_KEY_INVALID',
+            message: `配置 ${key} 不存在或不允许修改`,
+          });
+        }
+
+        const normalizedValue = normalizeSettingValue(definition, item.value);
+
+        return this.prismaService.setting.upsert({
+          where: { key },
+          update: {
+            group: definition.group,
+            value: JSON.stringify(normalizedValue),
+            isPublic: definition.isPublic,
+            description: definition.description,
+            updatedById: currentUser.userId,
+          },
+          create: {
+            group: definition.group,
+            key,
+            value: JSON.stringify(normalizedValue),
+            isPublic: definition.isPublic,
+            description: definition.description,
+            updatedById: currentUser.userId,
+          },
+        });
+      }),
+    );
+
+    return this.listAdminSettings(currentUser);
+  }
+
+  // 公开接口仅返回标记为 public 的配置，避免后台私有运营配置泄露。
+  async getPublicSiteSettings() {
+    const publicDefinitions = SETTING_DEFINITIONS.filter((definition) => definition.isPublic);
+    const settings = await this.prismaService.setting.findMany({
+      where: {
+        key: {
+          in: publicDefinitions.map((definition) => definition.key),
+        },
+        isPublic: true,
+      },
+      orderBy: [{ group: 'asc' }, { key: 'asc' }],
+    });
+
+    const settingMap = new Map(settings.map((item) => [item.key, item]));
+    const groups = SETTING_GROUPS.map((group) => this.buildGroupPayload(group, settingMap, true)).filter(
+      (group) => group.items.length > 0,
+    );
+
+    return {
+      groups,
+      values: groups.reduce<Record<string, Record<string, unknown>>>((accumulator, group) => {
+        accumulator[group.group] = group.items.reduce<Record<string, unknown>>((groupAccumulator, item) => {
+          const [, field] = item.key.split('.');
+          groupAccumulator[field] = item.value;
+          return groupAccumulator;
+        }, {});
+
+        return accumulator;
+      }, {}),
+    };
+  }
+
+  private buildGroupPayload(
+    group: string,
+    settingMap: Map<string, SettingRecordLike>,
+    publicOnly: boolean,
+  ) {
+    const items = SETTING_DEFINITIONS.filter((definition) => definition.group === group)
+      .filter((definition) => (publicOnly ? definition.isPublic : true))
+      .map((definition) => {
+        const persisted = settingMap.get(definition.key);
+        return this.toSettingItem(definition.key, persisted);
+      });
+
+    return {
+      group,
+      items,
+    };
+  }
+
+  private toSettingItem(key: string, persisted?: SettingRecordLike) {
+    const definition = SETTING_DEFINITION_MAP.get(key);
+
+    if (!definition) {
+      throw new NotFoundException({
+        code: 'SETTING_KEY_INVALID',
+        message: `配置 ${key} 不存在`,
+      });
+    }
+
+    return {
+      key: definition.key,
+      group: definition.group,
+      description: definition.description,
+      isPublic: definition.isPublic,
+      value: persisted
+        ? parseStoredSettingValue(definition, persisted.value)
+        : definition.defaultValue,
+      updatedById: persisted?.updatedById ?? null,
+      createdAt: persisted?.createdAt ?? null,
+      updatedAt: persisted?.updatedAt ?? null,
+    };
+  }
+
+  private ensureSuperAdmin(currentUser: AuthenticatedUser): void {
+    if (currentUser.role === UserRole.SUPER_ADMIN) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'SETTING_UPDATE_FORBIDDEN',
+      message: '仅超级管理员可访问站点设置',
+    });
+  }
+}
