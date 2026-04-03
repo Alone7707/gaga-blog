@@ -14,6 +14,14 @@ import { ReviewCommentDto } from './dto/review-comment.dto';
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @Get('stats')
+  @ApiOperation({ summary: '获取后台评论统计概览' })
+  async stats() {
+    return {
+      stats: await this.commentService.getCommentStats(),
+    };
+  }
+
   @Get()
   @ApiOperation({ summary: '获取后台评论列表' })
   async list(@Query() query: ListCommentQueryDto) {

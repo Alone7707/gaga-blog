@@ -15,4 +15,12 @@ export class PublicSiteController {
   async getSiteSettings() {
     return await this.settingService.getPublicSiteSettings();
   }
+
+  @Get('overview')
+  @ApiOperation({ summary: '获取前台可直接消费的站点概览信息' })
+  async getSiteOverview() {
+    return {
+      overview: await this.settingService.getPublicSiteOverview(),
+    };
+  }
 }

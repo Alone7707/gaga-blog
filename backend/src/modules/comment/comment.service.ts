@@ -52,6 +52,56 @@ type CommentDetailPayload = Prisma.CommentGetPayload<{
 export class CommentService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  // 评论统计概览统一收口，便于后台审核台直接消费卡片数据。
+  async getCommentStats() {
+    const [total, pending, approved, rejected, spam, latestComment] = await this.prismaService.$transaction([
+      this.prismaService.comment.count(),
+      this.prismaService.comment.count({
+        where: { status: CommentStatus.PENDING },
+      }),
+      this.prismaService.comment.count({
+        where: { status: CommentStatus.APPROVED },
+      }),
+      this.prismaService.comment.count({
+        where: { status: CommentStatus.REJECTED },
+      }),
+      this.prismaService.comment.count({
+        where: { status: CommentStatus.SPAM },
+      }),
+      this.prismaService.comment.findFirst({
+        orderBy: [{ createdAt: 'desc' }],
+        select: {
+          id: true,
+          createdAt: true,
+          post: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      pending,
+      approved,
+      rejected,
+      spam,
+      pendingRate: total === 0 ? 0 : Number((pending / total).toFixed(4)),
+      approvedRate: total === 0 ? 0 : Number((approved / total).toFixed(4)),
+      latestComment: latestComment
+        ? {
+            id: latestComment.id,
+            createdAt: latestComment.createdAt,
+            post: latestComment.post,
+          }
+        : null,
+    };
+  }
+
   // 后台评论列表支持按状态、文章与关键词筛选，满足审核台最小交付能力。
   async listComments(query: ListCommentQueryDto) {
     const page = query.page ?? 1;

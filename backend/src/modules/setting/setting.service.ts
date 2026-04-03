@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { CommentStatus, PostStatus, PostVisibility, UserRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
@@ -125,6 +125,79 @@ export class SettingService {
 
   // 公开接口仅返回标记为 public 的配置，避免后台私有运营配置泄露。
   async getPublicSiteSettings() {
+    const groups = await this.getPublicSettingGroups();
+
+    return {
+      groups,
+      values: this.toPublicSettingValues(groups),
+    };
+  }
+
+  // 站点概览额外补齐文章与评论公开统计，供前台首页或页脚直接消费。
+  async getPublicSiteOverview() {
+    const [groups, publishedPostCount, approvedCommentCount, latestPublishedPost] = await Promise.all([
+      this.getPublicSettingGroups(),
+      this.prismaService.post.count({
+        where: {
+          deletedAt: null,
+          status: PostStatus.PUBLISHED,
+          visibility: PostVisibility.PUBLIC,
+          publishedAt: {
+            not: null,
+            lte: new Date(),
+          },
+        },
+      }),
+      this.prismaService.comment.count({
+        where: {
+          status: CommentStatus.APPROVED,
+          post: {
+            deletedAt: null,
+            status: PostStatus.PUBLISHED,
+            visibility: PostVisibility.PUBLIC,
+            publishedAt: {
+              not: null,
+              lte: new Date(),
+            },
+          },
+        },
+      }),
+      this.prismaService.post.findFirst({
+        where: {
+          deletedAt: null,
+          status: PostStatus.PUBLISHED,
+          visibility: PostVisibility.PUBLIC,
+          publishedAt: {
+            not: null,
+            lte: new Date(),
+          },
+        },
+        orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          publishedAt: true,
+        },
+      }),
+    ]);
+
+    const values = this.toPublicSettingValues(groups);
+
+    return {
+      site: values.site ?? {},
+      seo: values.seo ?? {},
+      comment: values.comment ?? {},
+      content: values.content ?? {},
+      stats: {
+        publishedPostCount,
+        approvedCommentCount,
+      },
+      latestPublishedPost,
+    };
+  }
+
+  private async getPublicSettingGroups() {
     const publicDefinitions = SETTING_DEFINITIONS.filter((definition) => definition.isPublic);
     const settings = await this.prismaService.setting.findMany({
       where: {
@@ -137,22 +210,21 @@ export class SettingService {
     });
 
     const settingMap = new Map(settings.map((item) => [item.key, item]));
-    const groups = SETTING_GROUPS.map((group) => this.buildGroupPayload(group, settingMap, true)).filter(
+    return SETTING_GROUPS.map((group) => this.buildGroupPayload(group, settingMap, true)).filter(
       (group) => group.items.length > 0,
     );
+  }
 
-    return {
-      groups,
-      values: groups.reduce<Record<string, Record<string, unknown>>>((accumulator, group) => {
-        accumulator[group.group] = group.items.reduce<Record<string, unknown>>((groupAccumulator, item) => {
-          const [, field] = item.key.split('.');
-          groupAccumulator[field] = item.value;
-          return groupAccumulator;
-        }, {});
+  private toPublicSettingValues(groups: Array<{ group: string; items: Array<{ key: string; value: unknown }> }>) {
+    return groups.reduce<Record<string, Record<string, unknown>>>((accumulator, group) => {
+      accumulator[group.group] = group.items.reduce<Record<string, unknown>>((groupAccumulator, item) => {
+        const [, field] = item.key.split('.');
+        groupAccumulator[field] = item.value;
+        return groupAccumulator;
+      }, {});
 
-        return accumulator;
-      }, {}),
-    };
+      return accumulator;
+    }, {});
   }
 
   private buildGroupPayload(
