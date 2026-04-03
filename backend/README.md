@@ -4,7 +4,7 @@
 
 ## 当前范围
 
-本次覆盖第十三个后端模块：**评论统计与公开站点信息消费配套收尾**。当前累计已完成：**项目初始化与数据库基础层**、**鉴权与管理员初始化基础能力**、**文章模块骨架**、**公开侧文章查询模块**、**分类管理模块**、**标签管理模块**、**公开归档模块**、**公开搜索模块**、**公开分类/标签聚合模块**、**评论基础模块**、**站点设置模块**、**评论统计与公开站点概览接口**。
+本次覆盖第十四个后端模块：**SEO / RSS / Sitemap 基础能力**。当前累计已完成：**项目初始化与数据库基础层**、**鉴权与管理员初始化基础能力**、**文章模块骨架**、**公开侧文章查询模块**、**分类管理模块**、**标签管理模块**、**公开归档模块**、**公开搜索模块**、**公开分类/标签聚合模块**、**评论基础模块**、**站点设置模块**、**评论统计与公开站点概览接口**、**SEO / RSS / Sitemap 基础能力**。
 
 已完成内容：
 
@@ -23,6 +23,9 @@
 - 评论公开展示仅返回已审核通过内容
 - 评论提交补充基础去重与父评论合法性校验
 - 提供公开站点设置接口与站点概览接口，便于前台首页/页脚直接消费
+- 提供 `/rss.xml`、`/sitemap.xml`、`/robots.txt` 标准公开输出
+- 提供 `/api/public/seo/manifest` 聚合清单接口，便于前端直接消费 SEO 基础数据
+- 公开 SEO 能力仅暴露公开且已发布文章，并过滤无公开内容的分类与标签
 - 提供基于 JWT + HttpOnly Cookie 的基础鉴权链路
 - 提供基础启动与数据库脚本
 
@@ -48,7 +51,9 @@ backend/
       public-comment/
       public-post/
       public-search/
+      public-seo/
       public-taxonomy/
+      setting/
       tag/
       user/
     prisma/
@@ -116,6 +121,10 @@ pnpm dev
 - API 服务：`http://localhost:3000`
 - Swagger 文档：`http://localhost:3000/docs`
 - 健康检查：`http://localhost:3000/api/system/health`
+- SEO 清单：`http://localhost:3000/api/public/seo/manifest`
+- RSS：`http://localhost:3000/rss.xml`
+- Sitemap：`http://localhost:3000/sitemap.xml`
+- Robots：`http://localhost:3000/robots.txt`
 
 ## 当前数据模型
 
@@ -203,6 +212,22 @@ pnpm dev
 - `GET /api/public/site`
 - `GET /api/public/site/overview`
 
+### 公开 SEO / 订阅接口
+
+- `GET /api/public/seo/manifest`
+- `GET /rss.xml`
+- `GET /sitemap.xml`
+- `GET /robots.txt`
+
+## SEO / 订阅模块说明
+
+- `rss.xml` 默认输出最近 20 篇公开已发布文章，字段包含标题、链接、描述、作者、分类与发布时间
+- `sitemap.xml` 默认输出首页、归档页、分类列表页、标签列表页、文章详情页、分类详情页、标签详情页
+- `robots.txt` 受 `seo.enableRobots` 配置控制，默认放行并声明 sitemap 与 RSS 地址
+- `/api/public/seo/manifest` 返回站点标题、描述、基础地址、订阅端点、公开分类/标签统计、最近文章清单
+- 所有 SEO / 订阅输出都严格依赖 `site.baseUrl` 生成绝对地址；未配置时会退回 `http://localhost:3000`
+- 所有 SEO / 订阅输出都只暴露 `PUBLISHED + PUBLIC + publishedAt <= now + 未软删除` 的文章
+
 ## 评论模块说明
 
 - 公开评论提交无需登录，默认进入 `PENDING` 待审核状态
@@ -221,7 +246,7 @@ pnpm dev
 
 ## 说明
 
-- 本次评论统计与公开站点概览收尾未发生 Prisma schema 变更，因此无需新增 migration
+- 本次 SEO / RSS / Sitemap 模块未发生 Prisma schema 变更，因此无需新增 migration
 - SQLite 数据文件已加入忽略规则，不进入版本库
 - 代码注释统一使用中文，便于后续协作维护
 - 当前子环境内 `node` / `npm` 命令未挂入 PATH，暂未能完成本地构建校验；主会话可在具备 Node PATH 的终端执行 `npm run build` 复核

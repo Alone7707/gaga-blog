@@ -12,6 +12,7 @@ import { PublicArchiveModule } from './modules/public-archive/public-archive.mod
 import { PublicCommentModule } from './modules/public-comment/public-comment.module';
 import { PublicPostModule } from './modules/public-post/public-post.module';
 import { PublicSearchModule } from './modules/public-search/public-search.module';
+import { PublicSeoModule } from './modules/public-seo/public-seo.module';
 import { PublicTaxonomyModule } from './modules/public-taxonomy/public-taxonomy.module';
 import { SettingModule } from './modules/setting/setting.module';
 import { TagModule } from './modules/tag/tag.module';
@@ -36,6 +37,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PublicCommentModule,
     PublicArchiveModule,
     PublicSearchModule,
+    PublicSeoModule,
     PublicTaxonomyModule,
     CategoryModule,
     TagModule,
