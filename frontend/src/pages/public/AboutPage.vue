@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 
 import { getPublicStaticPage, getPublicSiteOverview } from '../../api/site'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { PublicSiteOverview, PublicStaticPage } from '../../types/site'
 import { formatPublicDate } from '../../utils/public-post'
 
@@ -98,56 +99,35 @@ onMounted(() => {
       </p>
       <RouterLink to="/" class="ui-btn ui-btn-ghost mt-6 text-sm">
         回到首页
-        <span aria-hidden="true">→</span>
       </RouterLink>
     </section>
 
     <template v-else>
-      <section class="panel-surface overflow-hidden rounded-[32px] p-6 md:p-8">
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px] xl:items-start">
-          <div>
-            <p class="editor-kicker">About / Public Page</p>
-            <h2 class="editor-title mt-4 text-[36px] leading-[1.08] md:text-[48px] lg:text-[56px]">
-              {{ page?.title || '关于我' }}
-            </h2>
-            <p class="mt-5 max-w-3xl text-sm text-[var(--text-3)] leading-7 md:text-[16px]">
-              {{ pageSummary }}
-            </p>
-
-            <div class="mt-6 flex flex-wrap gap-3 text-sm text-[var(--text-3)]">
-              <span class="ui-badge">公开静态页</span>
-              <span v-if="page?.updatedAt" class="editor-mono">最近更新：{{ formatPublicDate(page.updatedAt) }}</span>
-              <span v-if="overview?.site?.title">站点：{{ overview.site.title }}</span>
-            </div>
-          </div>
-
-          <div class="rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
-            <p class="editor-kicker">站点概览</p>
-            <h3 class="mt-3 text-[20px] text-[var(--text-1)] font-semibold">
-              最小联调闭环已接通
-            </h3>
-            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div class="rounded-[18px] border border-[var(--line-soft)] bg-white p-4">
-                <p class="text-xs text-[var(--text-4)]">公开文章</p>
-                <p class="mt-2 text-[28px] font-semibold text-[var(--text-1)]">{{ overview?.stats.publishedPostCount ?? 0 }}</p>
-              </div>
-              <div class="rounded-[18px] border border-[var(--line-soft)] bg-white p-4">
-                <p class="text-xs text-[var(--text-4)]">已审评论</p>
-                <p class="mt-2 text-[28px] font-semibold text-[var(--text-1)]">{{ overview?.stats.approvedCommentCount ?? 0 }}</p>
-              </div>
-            </div>
-            <div class="mt-5 flex flex-wrap gap-3">
-              <RouterLink to="/" class="ui-btn ui-btn-secondary text-sm">返回首页</RouterLink>
-              <RouterLink v-if="latestPostLink" :to="latestPostLink" class="ui-btn ui-btn-ghost text-sm">查看最新文章</RouterLink>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PublicPageHero
+        kicker="About / Public Page"
+        :title="page?.title || '关于我'"
+        :description="pageSummary"
+        :meta="[
+          '公开静态页',
+          page?.updatedAt ? `最近更新：${formatPublicDate(page.updatedAt)}` : '等待内容更新',
+          overview?.site?.title ? `站点：${overview.site.title}` : '站点信息待补充',
+        ]"
+        :actions="[
+          { label: '返回首页', to: '/', variant: 'secondary' },
+          ...(latestPostLink ? [{ label: '查看最新文章', to: latestPostLink, variant: 'ghost' as const }] : []),
+        ]"
+        aside-title="站点概览"
+        aside-text="关于页已经接入公开静态页和站点概览接口，后台保存后可直接在前台可见。"
+        :aside-stats="[
+          { label: '公开文章', value: overview?.stats.publishedPostCount ?? 0 },
+          { label: '已审评论', value: overview?.stats.approvedCommentCount ?? 0 },
+        ]"
+      />
 
       <SectionCard
         title="正文内容"
         description="当前 about 页面直接消费 /api/public/site/pages/about，正文为空时给出明确占位。"
-        variant="panel"
+        variant="hero"
         size="lg"
       >
         <article

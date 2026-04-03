@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { getPublicArchives } from '../../api/public'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { PublicArchiveYearBucket } from '../../types/public'
 import { formatPublicDate } from '../../utils/public-post'
 
@@ -12,8 +13,8 @@ const errorMessage = ref('')
 const archives = ref<PublicArchiveYearBucket[]>([])
 const totalPosts = ref(0)
 
-// 归档页直接消费后端按年月聚合的数据，页面只负责最小展示与跳转。
 const totalMonths = computed(() => archives.value.reduce((sum, year) => sum + year.months.length, 0))
+const latestYear = computed(() => archives.value[0]?.year ?? '--')
 
 async function loadArchives() {
   loading.value = true
@@ -35,60 +36,75 @@ async function loadArchives() {
 }
 
 onMounted(() => {
-  loadArchives()
+  void loadArchives()
 })
 </script>
 
 <template>
-  <div class="space-y-6">
-    <SectionCard title="公开归档" description="按年月回溯全部公开文章，满足最小可交付的归档浏览能力。">
+  <div class="page-grid">
+    <PublicPageHero
+      kicker="Archives / Time Index"
+      title="公开归档"
+      description="归档页不再只是时间清单，而是内容时间轴。它负责给老内容一个清晰入口，也给站点沉淀感一个直接证明。"
+      :meta="[
+        `${totalPosts} 篇公开文章`,
+        `${archives.length} 个年份分组`,
+        `${totalMonths} 个自然月`,
+      ]"
+      :actions="[
+        { label: '回到首页', to: '/', variant: 'secondary' },
+        { label: '去搜索', to: '/search', variant: 'ghost' },
+      ]"
+      aside-title="时间是另一条内容导航"
+      aside-text="当用户记得发布时间、不记得分类时，归档页比搜索和标签更高效。"
+      :aside-stats="[
+        { label: '最新年份', value: latestYear },
+        { label: '月份分组', value: totalMonths },
+      ]"
+    />
+
+    <SectionCard title="归档概览" description="按年月回溯全部公开文章，满足最小可交付的归档浏览能力。" variant="panel">
       <div class="grid gap-4 md:grid-cols-3">
-        <div class="rounded-6 border border-white/10 bg-slate-950/25 p-5">
-          <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/80">
-            文章总量
-          </p>
-          <p class="mt-4 text-3xl text-white font-semibold">
+        <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+          <p class="editor-kicker">文章总量</p>
+          <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
             {{ totalPosts }}
           </p>
-          <p class="mt-2 text-sm text-slate-300 leading-7">
+          <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
             当前对外可见并已发布的文章数量。
           </p>
         </div>
-        <div class="rounded-6 border border-white/10 bg-slate-950/25 p-5">
-          <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/80">
-            年份分组
-          </p>
-          <p class="mt-4 text-3xl text-white font-semibold">
+        <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+          <p class="editor-kicker">年份分组</p>
+          <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
             {{ archives.length }}
           </p>
-          <p class="mt-2 text-sm text-slate-300 leading-7">
+          <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
             当前归档中包含的年份数量。
           </p>
         </div>
-        <div class="rounded-6 border border-white/10 bg-slate-950/25 p-5">
-          <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/80">
-            月份分组
-          </p>
-          <p class="mt-4 text-3xl text-white font-semibold">
+        <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+          <p class="editor-kicker">月份分组</p>
+          <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
             {{ totalMonths }}
           </p>
-          <p class="mt-2 text-sm text-slate-300 leading-7">
+          <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
             用于快速定位内容发布时间区间。
           </p>
         </div>
       </div>
     </SectionCard>
 
-    <SectionCard title="归档列表" description="按照年份和月份分组展示文章标题、发布时间及分类入口。">
-      <div v-if="loading" class="rounded-6 border border-dashed border-white/10 bg-slate-950/20 p-5 text-sm text-slate-300 leading-7">
+    <SectionCard title="归档列表" description="按照年份和月份分组展示文章标题、发布时间及分类入口。" variant="hero" size="lg">
+      <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
         正在加载归档数据...
       </div>
 
-      <div v-else-if="errorMessage" class="rounded-6 border border-rose-400/25 bg-rose-400/8 p-5 text-sm text-rose-100 leading-7">
+      <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
         {{ errorMessage }}
       </div>
 
-      <div v-else-if="!archives.length" class="rounded-6 border border-dashed border-white/10 bg-slate-950/20 p-5 text-sm text-slate-300 leading-7">
+      <div v-else-if="!archives.length" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
         当前还没有可展示的公开归档内容。
       </div>
 
@@ -96,18 +112,16 @@ onMounted(() => {
         <section
           v-for="year in archives"
           :key="year.year"
-          class="rounded-6 border border-white/10 bg-slate-950/20 p-5"
+          class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5"
         >
-          <div class="flex flex-col gap-2 border-b border-white/8 pb-4 md:flex-row md:items-end md:justify-between">
+          <div class="flex flex-col gap-2 border-b border-[var(--line-soft)] pb-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/80">
-                年度归档
-              </p>
-              <h3 class="mt-3 text-2xl text-white font-semibold">
+              <p class="editor-kicker">年度归档</p>
+              <h3 class="mt-3 text-[28px] text-[var(--text-1)] font-semibold">
                 {{ year.year }}
               </h3>
             </div>
-            <p class="text-sm text-slate-300">
+            <p class="text-sm text-[var(--text-3)]">
               共 {{ year.count }} 篇文章 / {{ year.months.length }} 个自然月
             </p>
           </div>
@@ -116,52 +130,50 @@ onMounted(() => {
             <section
               v-for="month in year.months"
               :key="month.month"
-              class="rounded-5 border border-white/8 bg-slate-950/25 p-4"
+              class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4"
             >
               <div class="mb-4 flex items-center justify-between gap-3">
-                <h4 class="text-lg text-white font-semibold">
+                <h4 class="text-[20px] text-[var(--text-1)] font-semibold">
                   {{ month.monthLabel }}
                 </h4>
-                <span class="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-                  {{ month.count }} 篇
-                </span>
+                <span class="ui-badge">{{ month.count }} 篇</span>
               </div>
 
               <div class="space-y-3">
                 <article
                   v-for="post in month.posts"
                   :key="post.id"
-                  class="rounded-4 border border-white/8 bg-slate-950/30 p-4 transition hover:border-cyan-300/30"
+                  class="rounded-[18px] border border-[var(--line-soft)] bg-white p-4 transition hover:border-[rgba(76,139,245,0.22)]"
                 >
                   <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div class="min-w-0 flex-1">
                       <RouterLink
                         :to="`/posts/${post.slug}`"
-                        class="text-lg text-white font-semibold leading-7 transition hover:text-cyan-100"
+                        class="text-lg text-[var(--text-1)] font-semibold leading-7 transition hover:text-[var(--accent-primary)]"
                       >
                         {{ post.title }}
                       </RouterLink>
-                      <p class="mt-2 text-sm text-slate-300 leading-7">
+                      <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
                         {{ post.summary || '当前文章暂无摘要。' }}
                       </p>
-                      <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                      <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--text-4)]">
                         <span>{{ formatPublicDate(post.publishedAt) }}</span>
-                        <span class="text-white/20">•</span>
+                        <span>•</span>
                         <RouterLink
                           v-if="post.category"
                           :to="`/categories/${post.category.slug}`"
-                          class="rounded-full border border-cyan-300/20 bg-cyan-300/8 px-3 py-1 text-cyan-200 transition hover:border-cyan-200"
+                          class="ui-badge"
                         >
                           {{ post.category.name }}
                         </RouterLink>
                         <template v-if="post.tags.length">
-                          <span class="text-white/20">•</span>
+                          <span>•</span>
                           <div class="flex flex-wrap gap-2">
                             <RouterLink
                               v-for="tag in post.tags"
                               :key="tag.id"
                               :to="`/tags/${tag.slug}`"
-                              class="rounded-full border border-white/10 px-3 py-1 text-slate-300 transition hover:border-cyan-300/30 hover:text-cyan-100"
+                              class="rounded-full border border-[var(--line-soft)] px-3 py-1 text-[var(--text-3)] transition hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]"
                             >
                               # {{ tag.name }}
                             </RouterLink>
@@ -172,10 +184,9 @@ onMounted(() => {
 
                     <RouterLink
                       :to="`/posts/${post.slug}`"
-                      class="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 px-4 py-2 text-sm text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/10"
+                      class="ui-btn ui-btn-ghost text-sm"
                     >
                       阅读文章
-                      <span aria-hidden="true">→</span>
                     </RouterLink>
                   </div>
                 </article>
