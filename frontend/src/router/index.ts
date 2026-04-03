@@ -13,6 +13,7 @@ import AdminLoginPage from '../pages/admin/AdminLoginPage.vue'
 import AdminPostEditorPage from '../pages/admin/AdminPostEditorPage.vue'
 import AdminPostsPage from '../pages/admin/AdminPostsPage.vue'
 import AdminTagsPage from '../pages/admin/AdminTagsPage.vue'
+import ArchivesPage from '../pages/public/ArchivesPage.vue'
 import CategoriesPage from '../pages/public/CategoriesPage.vue'
 import CategoryPostsPage from '../pages/public/CategoryPostsPage.vue'
 import HomePage from '../pages/public/HomePage.vue'
@@ -86,6 +87,14 @@ const routes: RouteRecordRaw[] = [
         component: SearchPage,
         meta: {
           title: '公开搜索',
+        },
+      },
+      {
+        path: 'archives',
+        name: 'public-archives',
+        component: ArchivesPage,
+        meta: {
+          title: '公开归档',
         },
       },
     ],

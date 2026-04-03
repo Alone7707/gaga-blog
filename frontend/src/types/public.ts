@@ -57,11 +57,6 @@ export interface PublicPostDetail extends PublicPostListItem {
   seoDescription: string | null
 }
 
-export interface PublicPostListResponse {
-  list: PublicPostListItem[]
-  pagination: PublicPagination
-}
-
 export interface PublicPostDetailResponse {
   id: string
   title: string
@@ -78,6 +73,11 @@ export interface PublicPostDetailResponse {
   author: PublicAuthor
   category: PublicCategorySummary | null
   tags: PublicPostTag[]
+}
+
+export interface PublicPostListResponse {
+  list: PublicPostListItem[]
+  pagination: PublicPagination
 }
 
 export interface PublicCategoryListResponse {
@@ -98,6 +98,79 @@ export interface PublicTagPostsResponse extends PublicPostListResponse {
 
 export interface PublicSearchResponse extends PublicPostListResponse {
   keyword: string
+}
+
+export interface PublicArchivePostItem {
+  id: string
+  title: string
+  slug: string
+  summary: string | null
+  coverImage: string | null
+  publishedAt: string
+  createdAt: string
+  updatedAt: string
+  category: PublicCategorySummary | null
+  tags: PublicPostTag[]
+}
+
+export interface PublicArchiveMonthBucket {
+  month: string
+  monthLabel: string
+  count: number
+  posts: PublicArchivePostItem[]
+}
+
+export interface PublicArchiveYearBucket {
+  year: string
+  count: number
+  months: PublicArchiveMonthBucket[]
+}
+
+export interface PublicArchiveResponse {
+  list: PublicArchiveYearBucket[]
+  total: number
+}
+
+export interface PublicCommentReply {
+  id: string
+  parentId: string | null
+  authorName: string
+  authorWebsite?: string | null
+  content: string
+  createdAt: string
+}
+
+export interface PublicCommentItem {
+  id: string
+  parentId: string | null
+  authorName: string
+  authorWebsite?: string | null
+  content: string
+  createdAt: string
+  replies: PublicCommentReply[]
+}
+
+export interface PublicCommentListResponse {
+  list: PublicCommentItem[]
+}
+
+export interface PublicCreateCommentPayload {
+  authorName: string
+  authorEmail?: string
+  authorWebsite?: string
+  content: string
+  parentId?: string
+}
+
+export interface PublicCreateCommentResponse {
+  id: string
+  status: string
+  createdAt: string
+  postId: string
+  parentId: string | null
+  authorName: string
+  content: string
+  reviewMessage: string
 }
 
 export interface PublicPostListQuery {

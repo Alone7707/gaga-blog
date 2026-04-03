@@ -1,7 +1,11 @@
 import { request } from './http'
 import type {
+  PublicArchiveResponse,
   PublicCategoryListResponse,
   PublicCategoryPostsResponse,
+  PublicCommentListResponse,
+  PublicCreateCommentPayload,
+  PublicCreateCommentResponse,
   PublicPostDetailResponse,
   PublicPostListQuery,
   PublicPostListResponse,
@@ -11,7 +15,7 @@ import type {
   PublicTagPostsResponse,
 } from '../types/public'
 
-// 公开文章、分类、标签、搜索接口统一收口，避免页面重复拼接参数。
+// 公开文章、分类、标签、搜索、归档和评论接口统一收口，避免页面重复拼接参数。
 export function getPublicPosts(params: PublicPostListQuery = {}) {
   return request<PublicPostListResponse>({
     url: '/api/public/posts',
@@ -65,6 +69,28 @@ export function searchPublicPosts(params: PublicSearchQuery) {
   })
 }
 
+export function getPublicArchives() {
+  return request<PublicArchiveResponse>({
+    url: '/api/public/archives',
+    method: 'get',
+  })
+}
+
+export function getPublicComments(slug: string) {
+  return request<PublicCommentListResponse>({
+    url: `/api/public/posts/${slug}/comments`,
+    method: 'get',
+  })
+}
+
+export function createPublicComment(slug: string, payload: PublicCreateCommentPayload) {
+  return request<{ comment: PublicCreateCommentResponse }>({
+    url: `/api/public/posts/${slug}/comments`,
+    method: 'post',
+    data: buildPublicCommentPayload(payload),
+  }).then((response) => response.comment)
+}
+
 function buildPublicListParams(params: PublicPostListQuery) {
   return {
     page: params.page ?? 1,
@@ -78,5 +104,15 @@ function buildPublicSearchParams(params: PublicSearchQuery) {
     q: params.q.trim(),
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 10,
+  }
+}
+
+function buildPublicCommentPayload(payload: PublicCreateCommentPayload) {
+  return {
+    authorName: payload.authorName.trim(),
+    ...(payload.authorEmail?.trim() ? { authorEmail: payload.authorEmail.trim() } : {}),
+    ...(payload.authorWebsite?.trim() ? { authorWebsite: payload.authorWebsite.trim() } : {}),
+    content: payload.content.trim(),
+    ...(payload.parentId?.trim() ? { parentId: payload.parentId.trim() } : {}),
   }
 }
