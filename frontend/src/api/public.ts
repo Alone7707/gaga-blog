@@ -1,5 +1,6 @@
 import { request } from './http'
 import type {
+  PublicArchiveQuery,
   PublicArchiveResponse,
   PublicCategoryListResponse,
   PublicCategoryPostsResponse,
@@ -69,10 +70,11 @@ export function searchPublicPosts(params: PublicSearchQuery) {
   }).then(normalizePublicSearchResponse)
 }
 
-export function getPublicArchives() {
+export function getPublicArchives(params: PublicArchiveQuery = {}) {
   return request<PublicArchiveResponse>({
     url: '/api/public/archives',
     method: 'get',
+    params: buildPublicArchiveParams(params),
   }).then(normalizePublicArchiveResponse)
 }
 
@@ -104,6 +106,12 @@ function buildPublicSearchParams(params: PublicSearchQuery) {
     q: params.q.trim(),
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 10,
+  }
+}
+
+function buildPublicArchiveParams(params: PublicArchiveQuery) {
+  return {
+    page: params.page ?? 1,
   }
 }
 
@@ -150,9 +158,26 @@ function normalizePublicSearchResponse(response: PublicSearchResponse): PublicSe
 }
 
 function normalizePublicArchiveResponse(response: PublicArchiveResponse): PublicArchiveResponse {
+  const normalizedList = Array.isArray(response.list) ? response.list : []
+  const normalizedPagination = normalizePublicPagination(response.pagination)
+  const normalizedTotal = typeof response.total === 'number'
+    ? response.total
+    : normalizedList.reduce(
+        (sum, year) => sum + year.months.reduce((monthSum, month) => monthSum + month.count, 0),
+        0,
+      )
+
   return {
-    list: Array.isArray(response.list) ? response.list : [],
-    total: typeof response.total === 'number' ? response.total : 0,
+    list: normalizedList,
+    total: normalizedTotal,
+    pagination: normalizedPagination.total > 0 || typeof normalizedPagination !== 'undefined'
+      ? normalizedPagination
+      : {
+          page: 1,
+          pageSize: normalizedTotal || 10,
+          total: normalizedTotal,
+          totalPages: normalizedTotal > 0 ? 1 : 0,
+        },
   }
 }
 
@@ -162,7 +187,7 @@ function normalizePublicCommentListResponse(response: PublicCommentListResponse)
   }
 }
 
-function normalizePublicPagination(pagination: PublicPostListResponse['pagination']) {
+function normalizePublicPagination(pagination?: PublicPostListResponse['pagination']) {
   return {
     page: typeof pagination?.page === 'number' ? pagination.page : 1,
     pageSize: typeof pagination?.pageSize === 'number' ? pagination.pageSize : 10,

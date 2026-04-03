@@ -126,9 +126,14 @@ export interface PublicArchiveYearBucket {
   months: PublicArchiveMonthBucket[]
 }
 
+export interface PublicArchiveQuery {
+  page?: number
+}
+
 export interface PublicArchiveResponse {
   list: PublicArchiveYearBucket[]
   total: number
+  pagination?: PublicPagination
 }
 
 export interface PublicCommentReply {

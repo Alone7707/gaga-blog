@@ -1,35 +1,60 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { getPublicArchives } from '../../api/public'
 import SectionCard from '../../components/common/SectionCard.vue'
 import PublicFeedbackState from '../../components/public/PublicFeedbackState.vue'
 import PublicPageHero from '../../components/public/PublicPageHero.vue'
-import type { PublicArchiveYearBucket } from '../../types/public'
+import type { PublicArchiveYearBucket, PublicPagination } from '../../types/public'
 import { formatPublicDate } from '../../utils/public-post'
+
+const route = useRoute()
+const router = useRouter()
 
 const loading = ref(false)
 const errorMessage = ref('')
 const archives = ref<PublicArchiveYearBucket[]>([])
 const totalPosts = ref(0)
+const pagination = ref<PublicPagination>({
+  page: 1,
+  pageSize: 10,
+  total: 0,
+  totalPages: 0,
+})
 
 const totalMonths = computed(() => archives.value.reduce((sum, year) => sum + year.months.length, 0))
 const latestYear = computed(() => archives.value[0]?.year ?? '--')
 const latestMonths = computed(() => archives.value[0]?.months.slice(0, 3) ?? [])
+const currentPage = computed(() => {
+  const page = Number(route.query.page ?? 1)
+  return Number.isInteger(page) && page > 0 ? page : 1
+})
 
-async function loadArchives() {
+async function loadArchives(page = currentPage.value) {
   loading.value = true
   errorMessage.value = ''
 
   try {
-    const response = await getPublicArchives()
+    const response = await getPublicArchives({ page })
     archives.value = response.list
     totalPosts.value = response.total
+    pagination.value = response.pagination ?? {
+      page,
+      pageSize: response.total || 10,
+      total: response.total,
+      totalPages: response.total > 0 ? 1 : 0,
+    }
   }
   catch (error) {
     archives.value = []
     totalPosts.value = 0
+    pagination.value = {
+      page: 1,
+      pageSize: 10,
+      total: 0,
+      totalPages: 0,
+    }
     errorMessage.value = error instanceof Error ? error.message : '归档数据加载失败'
   }
   finally {
@@ -37,9 +62,27 @@ async function loadArchives() {
   }
 }
 
+function changePage(nextPage: number) {
+  if (nextPage < 1 || nextPage > Math.max(pagination.value.totalPages, 1) || nextPage === pagination.value.page) {
+    return
+  }
+
+  void router.replace({
+    name: 'public-archives',
+    query: nextPage > 1 ? { page: String(nextPage) } : {},
+  })
+}
+
 onMounted(() => {
   void loadArchives()
 })
+
+watch(
+  () => route.query.page,
+  () => {
+    void loadArchives(currentPage.value)
+  },
+)
 </script>
 
 <template>
@@ -52,6 +95,7 @@ onMounted(() => {
         `${totalPosts} 篇公开文章`,
         `${archives.length} 个年份分组`,
         `${totalMonths} 个自然月`,
+        `当前第 ${pagination.page} / ${Math.max(pagination.totalPages, 1)} 页`,
       ]"
       :actions="[
         { label: '回到首页', to: '/', variant: 'secondary' },
@@ -62,6 +106,7 @@ onMounted(() => {
       :aside-stats="[
         { label: '最新年份', value: latestYear },
         { label: '月份分组', value: totalMonths },
+        { label: '每页文章', value: pagination.pageSize },
       ]"
     />
 
@@ -128,6 +173,15 @@ onMounted(() => {
       </div>
 
       <div v-else class="space-y-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-4 text-sm text-[var(--text-3)]">
+          <p>
+            共 {{ pagination.total }} 篇公开文章，当前第 {{ pagination.page }} / {{ Math.max(pagination.totalPages, 1) }} 页，单页 {{ pagination.pageSize }} 篇。
+          </p>
+          <p>
+            本页实际展示 {{ archives.reduce((sum, year) => sum + year.count, 0) }} 篇。
+          </p>
+        </div>
+
         <section
           v-for="year in archives"
           :key="year.year"
@@ -213,6 +267,30 @@ onMounted(() => {
             </section>
           </div>
         </section>
+
+        <div v-if="pagination.totalPages > 1" class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-soft)] pt-2">
+          <p class="text-sm text-[var(--text-3)]">
+            共 {{ pagination.total }} 篇文章，当前第 {{ pagination.page }} / {{ pagination.totalPages }} 页
+          </p>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="pagination.page <= 1"
+              @click="changePage(pagination.page - 1)"
+            >
+              上一页
+            </button>
+            <button
+              type="button"
+              class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="pagination.page >= pagination.totalPages"
+              @click="changePage(pagination.page + 1)"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
       </div>
     </SectionCard>
   </div>

@@ -264,6 +264,36 @@ export class SettingService {
     };
   }
 
+  // 面向非后台链路读取单个设置值，缺失或脏数据时回退默认值，避免公开接口因设置异常直接失败。
+  async getSettingValue<T extends string | boolean | number | string[]>(key: string): Promise<T> {
+    const definition = SETTING_DEFINITION_MAP.get(key);
+
+    if (!definition) {
+      throw new NotFoundException({
+        code: 'SETTING_KEY_INVALID',
+        message: `配置 ${key} 不存在`,
+      });
+    }
+
+    const persisted = await this.prismaService.setting.findUnique({
+      where: { key },
+      select: {
+        value: true,
+      },
+    });
+
+    if (!persisted) {
+      return definition.defaultValue as T;
+    }
+
+    try {
+      return parseStoredSettingValue(definition, persisted.value) as T;
+    }
+    catch {
+      return definition.defaultValue as T;
+    }
+  }
+
   private async getPublicSettingGroups() {
     const publicDefinitions = SETTING_DEFINITIONS.filter((definition) => definition.isPublic);
     const settings = await this.prismaService.setting.findMany({

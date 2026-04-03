@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PostStatus, PostVisibility } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { SettingService } from '../setting/setting.service';
+import { PublicListArchivesQueryDto } from './dto/public-list-archives-query.dto';
 
 export interface ArchiveMonthBucket {
   month: string;
@@ -31,21 +33,24 @@ export interface ArchiveMonthBucket {
 
 @Injectable()
 export class PublicArchiveService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly settingService: SettingService,
+  ) {}
 
-  // 归档接口只输出公开且已发布文章，并按年月分组，满足前台归档页最小能力。
-  async listArchives() {
+  // 公开归档分页大小优先由后台设置驱动；缺失、脏数据或非法值时统一回退到安全默认值。
+  async listArchives(query: PublicListArchivesQueryDto) {
+    const page = query.page ?? 1;
+    const pageSize = await this.resolveArchivePageSize();
+    const total = await this.prismaService.post.count({
+      where: this.buildArchiveWhere(),
+    });
+
     const posts = await this.prismaService.post.findMany({
-      where: {
-        deletedAt: null,
-        status: PostStatus.PUBLISHED,
-        visibility: PostVisibility.PUBLIC,
-        publishedAt: {
-          not: null,
-          lte: new Date(),
-        },
-      },
+      where: this.buildArchiveWhere(),
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       include: {
         category: true,
         postTags: {
@@ -134,7 +139,35 @@ export class PublicArchiveService {
 
     return {
       list,
-      total: posts.length,
+      total,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: total === 0 ? 0 : Math.ceil(total / pageSize),
+      },
     };
+  }
+
+  private buildArchiveWhere() {
+    return {
+      deletedAt: null,
+      status: PostStatus.PUBLISHED,
+      visibility: PostVisibility.PUBLIC,
+      publishedAt: {
+        not: null,
+        lte: new Date(),
+      },
+    };
+  }
+
+  private async resolveArchivePageSize() {
+    const configuredPageSize = await this.settingService.getSettingValue<number>('content.archivePageSize');
+
+    if (!Number.isInteger(configuredPageSize) || configuredPageSize <= 0) {
+      return 20;
+    }
+
+    return Math.min(configuredPageSize, 100);
   }
 }
