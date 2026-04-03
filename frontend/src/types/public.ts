@@ -70,7 +70,7 @@ export interface PublicPostDetailResponse {
   publishedAt: string | null
   createdAt: string
   updatedAt: string
-  author: PublicAuthor
+  author?: PublicAuthor | null
   category: PublicCategorySummary | null
   tags: PublicPostTag[]
 }

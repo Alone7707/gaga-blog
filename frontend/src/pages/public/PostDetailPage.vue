@@ -54,6 +54,7 @@ const renderedContent = computed(() => {
 
 const totalReplies = computed(() => comments.value.reduce((sum, item) => sum + item.replies.length, 0))
 const totalCommentCount = computed(() => comments.value.length + totalReplies.value)
+const authorDisplayName = computed(() => currentPost.value?.author?.displayName || '匿名作者')
 
 async function loadPostDetail() {
   if (!slug.value) {
@@ -221,7 +222,7 @@ watch(
             </RouterLink>
             <span>{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</span>
             <span class="text-white/20">•</span>
-            <span>作者：{{ currentPost.author.displayName }}</span>
+            <span>作者：{{ authorDisplayName }}</span>
           </div>
 
           <div class="mt-5 flex flex-wrap gap-2">
@@ -251,7 +252,7 @@ watch(
               </h3>
               <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
                 <li>发布时间：{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</li>
-                <li>作者：{{ currentPost.author.displayName }}</li>
+                <li>作者：{{ authorDisplayName }}</li>
                 <li>分类：{{ currentPost.category?.name || '未分类' }}</li>
                 <li>标签数：{{ currentPost.tags.length }}</li>
               </ul>
