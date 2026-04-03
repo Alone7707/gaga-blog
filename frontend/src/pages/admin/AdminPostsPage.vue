@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { getAdminPosts } from '../../api/posts'
+import { archiveAdminPost, getAdminPosts, publishAdminPost, unpublishAdminPost } from '../../api/posts'
 import SectionCard from '../../components/common/SectionCard.vue'
 import type { AdminPostItem, PostStatus } from '../../types/post'
 
@@ -10,6 +10,8 @@ interface StatusOption {
   label: string
   value: '' | PostStatus
 }
+
+type PostActionType = 'publish' | 'unpublish' | 'archive'
 
 const statusOptions: StatusOption[] = [
   { label: '全部状态', value: '' },
@@ -24,7 +26,9 @@ const queryForm = reactive({
 })
 
 const loading = ref(false)
+const actionLoadingId = ref('')
 const errorMessage = ref('')
+const successMessage = ref('')
 const posts = ref<AdminPostItem[]>([])
 const pagination = reactive({
   page: 1,
@@ -41,7 +45,7 @@ const archivedCount = computed(() => posts.value.filter((post) => post.status ==
 const latestUpdatedAt = computed(() => posts.value[0]?.updatedAt ?? null)
 
 onMounted(() => {
-  loadPosts()
+  void loadPosts()
 })
 
 // 文章管理页优先保证真实列表、筛选与分页可用，再重组为更像工作台的界面。
@@ -57,11 +61,11 @@ async function loadPosts(page = pagination.page) {
       status: queryForm.status,
     })
 
-    posts.value = response.list
-    pagination.page = response.pagination.page
-    pagination.pageSize = response.pagination.pageSize
-    pagination.total = response.pagination.total
-    pagination.totalPages = response.pagination.totalPages
+    posts.value = Array.isArray(response.list) ? response.list : []
+    pagination.page = response.pagination?.page ?? page
+    pagination.pageSize = response.pagination?.pageSize ?? pagination.pageSize
+    pagination.total = response.pagination?.total ?? 0
+    pagination.totalPages = response.pagination?.totalPages ?? 0
   }
   catch (error) {
     posts.value = []
@@ -91,6 +95,73 @@ function handlePageChange(nextPage: number) {
   }
 
   void loadPosts(nextPage)
+}
+
+async function handlePostAction(post: AdminPostItem, action: PostActionType) {
+  if (actionLoadingId.value) {
+    return
+  }
+
+  actionLoadingId.value = post.id
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await (action === 'publish'
+      ? publishAdminPost(post.id)
+      : action === 'unpublish'
+        ? unpublishAdminPost(post.id)
+        : archiveAdminPost(post.id))
+
+    successMessage.value = getActionSuccessMessage(action)
+    await loadPosts(pagination.page)
+  }
+  catch (error) {
+    errorMessage.value = resolveErrorMessage(error, getActionFallbackMessage(action))
+  }
+  finally {
+    actionLoadingId.value = ''
+  }
+}
+
+function isActionPending(postId: string) {
+  return actionLoadingId.value === postId
+}
+
+function canPublish(post: AdminPostItem) {
+  return post.status !== 'PUBLISHED'
+}
+
+function canUnpublish(post: AdminPostItem) {
+  return post.status === 'PUBLISHED'
+}
+
+function canArchive(post: AdminPostItem) {
+  return post.status !== 'ARCHIVED'
+}
+
+function getActionSuccessMessage(action: PostActionType) {
+  if (action === 'publish') {
+    return '文章已发布'
+  }
+
+  if (action === 'unpublish') {
+    return '文章已下线为草稿'
+  }
+
+  return '文章已归档'
+}
+
+function getActionFallbackMessage(action: PostActionType) {
+  if (action === 'publish') {
+    return '文章发布失败，请稍后重试'
+  }
+
+  if (action === 'unpublish') {
+    return '文章下线失败，请稍后重试'
+  }
+
+  return '文章归档失败，请稍后重试'
 }
 
 function getStatusLabel(status: PostStatus) {
@@ -137,7 +208,7 @@ function formatDateTime(value: string | null) {
   }).format(date)
 }
 
-function resolveErrorMessage(error: unknown) {
+function resolveErrorMessage(error: unknown, fallback = '文章列表加载失败，请稍后重试') {
   if (typeof error === 'object' && error && 'message' in error) {
     const message = Reflect.get(error, 'message')
 
@@ -146,7 +217,7 @@ function resolveErrorMessage(error: unknown) {
     }
   }
 
-  return '文章列表加载失败，请稍后重试'
+  return fallback
 }
 </script>
 
@@ -154,7 +225,7 @@ function resolveErrorMessage(error: unknown) {
   <div class="page-grid">
     <SectionCard
       title="文章管理"
-      description="后台最核心的工作页。首轮只保留最常用的能力：看清状态、快速筛选、进入编辑与预览。"
+      description="后台最核心的工作页。首轮已补齐独立发布动作，状态切换不再依赖保存表单。"
       variant="hero"
       size="lg"
     >
@@ -225,7 +296,7 @@ function resolveErrorMessage(error: unknown) {
           <div class="flex flex-wrap items-center gap-3">
             <span>{{ totalLabel }}</span>
             <span class="ui-badge">分类筛选下一轮再接入</span>
-            <span class="ui-badge">批量操作位已预留到列表动作区</span>
+            <span class="ui-badge">已接独立发布动作</span>
           </div>
           <p class="editor-mono">默认按最近更新时间倒序展示</p>
         </div>
@@ -233,6 +304,10 @@ function resolveErrorMessage(error: unknown) {
     </SectionCard>
 
     <SectionCard title="文章列表" description="标题作为主视觉，状态、分类、更新时间围绕它组织。" variant="panel">
+      <div v-if="successMessage" class="mb-4 rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
+        {{ successMessage }}
+      </div>
+
       <div v-if="loading" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
         正在加载文章列表...
       </div>
@@ -253,7 +328,7 @@ function resolveErrorMessage(error: unknown) {
           :key="post.id"
           class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-5 transition hover:border-[rgba(76,139,245,0.18)] hover:shadow-[var(--shadow-xs)]"
         >
-          <div class="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_180px_180px_220px] xl:items-start">
+          <div class="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_180px_180px_280px] xl:items-start">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
                 <h3 class="truncate text-[18px] text-[var(--text-1)] font-semibold leading-7">{{ post.title }}</h3>
@@ -267,19 +342,19 @@ function resolveErrorMessage(error: unknown) {
               </p>
               <div class="mt-4 flex flex-wrap gap-2 text-xs text-[var(--text-4)]">
                 <span class="ui-badge">分类：{{ post.category?.name || '未分类' }}</span>
-                <span class="ui-badge">标签 {{ post.counts.tags }}</span>
-                <span class="ui-badge">评论 {{ post.counts.comments }}</span>
+                <span class="ui-badge">标签 {{ post.counts?.tags ?? 0 }}</span>
+                <span class="ui-badge">评论 {{ post.counts?.comments ?? 0 }}</span>
               </div>
             </div>
 
             <div class="text-sm text-[var(--text-3)] leading-7">
               <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-4)]">更新时间</p>
-              <p class="mt-2 editor-mono">{{ formatDateTime(post.updatedAt) }}</p>
+              <p class="mt-2 editor-mono">{{ formatDateTime(post.updatedAt ?? null) }}</p>
             </div>
 
             <div class="text-sm text-[var(--text-3)] leading-7">
               <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-4)]">发布时间</p>
-              <p class="mt-2 editor-mono">{{ formatDateTime(post.publishedAt) }}</p>
+              <p class="mt-2 editor-mono">{{ formatDateTime(post.publishedAt ?? null) }}</p>
             </div>
 
             <div class="flex flex-wrap gap-2 xl:justify-end">
@@ -289,8 +364,14 @@ function resolveErrorMessage(error: unknown) {
               <RouterLink :to="`/posts/${post.slug}`" target="_blank" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm">
                 预览
               </RouterLink>
-              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" disabled>
-                批量位预留
+              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" :disabled="!canPublish(post) || isActionPending(post.id)" @click="handlePostAction(post, 'publish')">
+                {{ isActionPending(post.id) ? '处理中...' : '发布' }}
+              </button>
+              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" :disabled="!canUnpublish(post) || isActionPending(post.id)" @click="handlePostAction(post, 'unpublish')">
+                {{ isActionPending(post.id) ? '处理中...' : '下线' }}
+              </button>
+              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" :disabled="!canArchive(post) || isActionPending(post.id)" @click="handlePostAction(post, 'archive')">
+                {{ isActionPending(post.id) ? '处理中...' : '归档' }}
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { request } from './http'
 import type {
+  AdminPostActionPayload,
   AdminPostDetailResponse,
   AdminPostEditorPayload,
   AdminPostListQuery,
@@ -13,7 +14,15 @@ export function getAdminPosts(params: AdminPostListQuery) {
     url: '/api/admin/posts',
     method: 'get',
     params: buildPostListParams(params),
-  })
+  }).then((response) => ({
+    list: Array.isArray(response.list) ? response.list : [],
+    pagination: {
+      page: response.pagination?.page ?? params.page ?? 1,
+      pageSize: response.pagination?.pageSize ?? params.pageSize ?? 10,
+      total: response.pagination?.total ?? 0,
+      totalPages: response.pagination?.totalPages ?? 0,
+    },
+  }))
 }
 
 // 文章详情接口用于编辑页回填，当前先承接最小可用编辑入口。
@@ -39,6 +48,31 @@ export function updateAdminPost(id: string, payload: AdminPostEditorPayload) {
     url: `/api/admin/posts/${id}`,
     method: 'patch',
     data: buildPostPayload(payload),
+  })
+}
+
+// 发布动作使用独立接口，补齐后端发布时间与校验链路。
+export function publishAdminPost(id: string, payload?: AdminPostActionPayload) {
+  return request<AdminPostSaveResponse>({
+    url: `/api/admin/posts/${id}/publish`,
+    method: 'patch',
+    data: buildPostActionPayload(payload),
+  })
+}
+
+// 下线动作独立走专用接口，避免通过保存表单混改状态。
+export function unpublishAdminPost(id: string) {
+  return request<AdminPostSaveResponse>({
+    url: `/api/admin/posts/${id}/unpublish`,
+    method: 'patch',
+  })
+}
+
+// 归档动作独立走专用接口，和普通编辑请求分离。
+export function archiveAdminPost(id: string) {
+  return request<AdminPostSaveResponse>({
+    url: `/api/admin/posts/${id}/archive`,
+    method: 'patch',
   })
 }
 
@@ -77,5 +111,15 @@ function buildPostPayload(payload: AdminPostEditorPayload) {
     ...(payload.publishedAt ? { publishedAt: payload.publishedAt } : {}),
     ...(categoryId ? { categoryId } : {}),
     ...(tagIds?.length ? { tagIds } : {}),
+  }
+}
+
+function buildPostActionPayload(payload?: AdminPostActionPayload) {
+  if (!payload?.publishedAt) {
+    return undefined
+  }
+
+  return {
+    publishedAt: payload.publishedAt,
   }
 }

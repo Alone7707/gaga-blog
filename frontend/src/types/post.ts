@@ -102,6 +102,10 @@ export interface AdminPostEditorPayload {
   tagIds?: string[]
 }
 
+export interface AdminPostActionPayload {
+  publishedAt?: string
+}
+
 export interface AdminPostListPagination {
   page: number
   pageSize: number
