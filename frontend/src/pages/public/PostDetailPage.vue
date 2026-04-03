@@ -45,11 +45,19 @@ const renderedContent = computed(() => {
     return ''
   }
 
-  if (currentPost.value.contentHtml?.trim()) {
-    return currentPost.value.contentHtml
+  const contentHtml = typeof currentPost.value.contentHtml === 'string'
+    ? currentPost.value.contentHtml.trim()
+    : ''
+
+  if (contentHtml) {
+    return contentHtml
   }
 
-  return markdown.render(currentPost.value.contentMarkdown)
+  const contentMarkdown = typeof currentPost.value.contentMarkdown === 'string'
+    ? currentPost.value.contentMarkdown
+    : ''
+
+  return markdown.render(contentMarkdown)
 })
 
 const totalReplies = computed(() => comments.value.reduce((sum, item) => sum + item.replies.length, 0))

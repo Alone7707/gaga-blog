@@ -62,8 +62,8 @@ export interface PublicPostDetailResponse {
   title: string
   slug: string
   summary: string | null
-  contentMarkdown: string
-  contentHtml: string | null
+  contentMarkdown?: string | null
+  contentHtml?: string | null
   coverImage: string | null
   seoTitle: string | null
   seoDescription: string | null
