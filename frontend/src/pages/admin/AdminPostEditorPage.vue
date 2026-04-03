@@ -353,8 +353,8 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <SectionCard :title="pageTitle" :description="pageDescription">
+  <div class="page-grid">
+    <SectionCard :title="pageTitle" :description="pageDescription" variant="hero" size="lg">
       <template #action>
         <div class="flex flex-wrap items-center justify-end gap-3">
           <button type="button" class="ui-btn ui-btn-secondary min-h-[40px] px-4 text-sm" @click="handleBack">返回列表</button>
@@ -368,14 +368,17 @@ function resolveErrorMessage(error: unknown, fallback: string) {
         <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.18)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">{{ errorMessage }}</div>
         <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.18)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">{{ successMessage }}</div>
 
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_340px]">
-          <div class="space-y-6">
-            <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
-              <div class="flex items-center justify-between gap-3">
-                <h3 class="text-lg text-[var(--text-1)] font-semibold">基础信息</h3>
-                <span class="ui-badge ui-badge-status-success">最小可用正式版</span>
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_360px]">
+          <div class="admin-form-grid">
+            <section class="admin-form-section">
+              <div class="admin-form-section-header">
+                <div>
+                  <p class="editor-kicker">Content Form</p>
+                  <h3 class="mt-3 text-lg text-[var(--text-1)] font-semibold">基础信息</h3>
+                </div>
+                <span class="ui-badge ui-badge-status-success">工作区主表单</span>
               </div>
-              <div class="mt-5 grid gap-4 md:grid-cols-2">
+              <div class="admin-form-section-body grid gap-4 md:grid-cols-2">
                 <label class="block md:col-span-2">
                   <span class="mb-2 block text-sm text-[var(--text-2)]">标题</span>
                   <input v-model="form.title" type="text" maxlength="150" placeholder="请输入文章标题" class="ui-input">
@@ -390,73 +393,78 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                 </label>
                 <label class="block md:col-span-2">
                   <span class="mb-2 block text-sm text-[var(--text-2)]">正文（Markdown）</span>
-                  <textarea v-model="form.contentMarkdown" rows="18" placeholder="请输入 Markdown 正文内容" class="ui-textarea min-h-[420px] font-mono text-sm leading-7" />
+                  <textarea v-model="form.contentMarkdown" rows="18" placeholder="请输入 Markdown 正文内容" class="ui-textarea min-h-[460px] font-mono text-sm leading-7" />
                 </label>
               </div>
             </section>
 
-            <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
-              <div class="flex items-center justify-between gap-3">
+            <section class="admin-form-section">
+              <div class="admin-form-section-header">
                 <div>
-                  <h3 class="text-lg text-[var(--text-1)] font-semibold">分类与标签</h3>
+                  <p class="editor-kicker">Taxonomy</p>
+                  <h3 class="mt-3 text-lg text-[var(--text-1)] font-semibold">分类与标签</h3>
                   <p class="mt-2 text-sm text-[var(--text-3)]">已从真实接口加载分类与标签数据，直接写入 categoryId 与 tagIds。</p>
                 </div>
                 <button type="button" class="ui-btn ui-btn-secondary min-h-[36px] px-3 text-xs" :disabled="taxonomyLoading" @click="loadTaxonomyOptions">{{ taxonomyLoading ? '刷新中...' : '刷新选项' }}</button>
               </div>
 
-              <div v-if="taxonomyMessage" class="mt-4 rounded-[18px] border border-[rgba(247,144,9,0.2)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">{{ taxonomyMessage }}</div>
+              <div class="admin-form-section-body">
+                <div v-if="taxonomyMessage" class="mb-4 rounded-[18px] border border-[rgba(247,144,9,0.2)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">{{ taxonomyMessage }}</div>
 
-              <div class="mt-5 grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-2)]">分类</span>
-                  <select v-model="form.categoryId" class="ui-select">
-                    <option value="">暂不设置分类</option>
-                    <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}（{{ category.postCount }}）</option>
-                  </select>
-                </label>
-                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
-                  <p class="text-xs text-[var(--text-4)]">当前分类</p>
-                  <p class="mt-3 text-[var(--text-1)] font-medium">{{ selectedCategory?.name || '未设置分类' }}</p>
-                  <p class="mt-2 text-xs text-[var(--text-3)]">{{ selectedCategory?.description || '分类说明会在这里展示，便于编辑时快速确认。' }}</p>
-                </div>
-                <div class="md:col-span-2">
-                  <div class="mb-2 flex items-center justify-between gap-3">
-                    <span class="block text-sm text-[var(--text-2)]">标签</span>
-                    <span class="text-xs text-[var(--text-4)]">已选 {{ form.tagIds.length }} 个</span>
+                <div class="grid gap-4 md:grid-cols-2">
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-2)]">分类</span>
+                    <select v-model="form.categoryId" class="ui-select">
+                      <option value="">暂不设置分类</option>
+                      <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}（{{ category.postCount }}）</option>
+                    </select>
+                  </label>
+                  <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
+                    <p class="text-xs text-[var(--text-4)]">当前分类</p>
+                    <p class="mt-3 text-[var(--text-1)] font-medium">{{ selectedCategory?.name || '未设置分类' }}</p>
+                    <p class="mt-2 text-xs text-[var(--text-3)]">{{ selectedCategory?.description || '分类说明会在这里展示，便于编辑时快速确认。' }}</p>
                   </div>
-                  <div v-if="!hasTaxonomyData && !taxonomyLoading" class="rounded-[18px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-5 text-sm text-[var(--text-3)]">暂无可选分类和标签，请先前往后台分类/标签管理页创建数据。</div>
-                  <div v-else class="flex flex-wrap gap-3 rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
-                    <button v-for="tag in tags" :key="tag.id" type="button" class="rounded-full border px-3 py-2 text-xs font-medium transition" :class="form.tagIds.includes(tag.id) ? 'border-[rgba(76,139,245,0.24)] bg-[#e8f1ff] text-[#235fc4]' : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.26)] hover:text-[var(--text-1)]'" @click="handleTagToggle(tag.id)">{{ tag.name }}</button>
+                  <div class="md:col-span-2">
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                      <span class="block text-sm text-[var(--text-2)]">标签</span>
+                      <span class="text-xs text-[var(--text-4)]">已选 {{ form.tagIds.length }} 个</span>
+                    </div>
+                    <div v-if="!hasTaxonomyData && !taxonomyLoading" class="rounded-[18px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-5 text-sm text-[var(--text-3)]">暂无可选分类和标签，请先前往后台分类/标签管理页创建数据。</div>
+                    <div v-else class="flex flex-wrap gap-3 rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                      <button v-for="tag in tags" :key="tag.id" type="button" class="rounded-full border px-3 py-2 text-xs font-medium transition" :class="form.tagIds.includes(tag.id) ? 'border-[rgba(76,139,245,0.24)] bg-[#e8f1ff] text-[#235fc4]' : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.26)] hover:text-[var(--text-1)]'" @click="handleTagToggle(tag.id)">{{ tag.name }}</button>
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
           </div>
 
-          <div class="space-y-6">
-            <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
-              <h3 class="text-lg text-[var(--text-1)] font-semibold">发布信息</h3>
-              <div class="mt-5 space-y-4 text-sm text-[var(--text-3)]">
-                <div class="rounded-[18px] border border-[rgba(76,139,245,0.18)] bg-[#eef4ff] p-4">
-                  <p class="text-xs text-[#235fc4]">当前状态</p>
-                  <p class="mt-3 text-base text-[var(--text-1)] font-semibold">{{ currentStatusMeta.label }}</p>
-                  <p class="mt-2 text-sm text-[var(--text-2)] leading-6">{{ currentStatusMeta.hint }}</p>
-                </div>
-                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
-                  <p class="text-xs text-[var(--text-4)]">动作说明</p>
-                  <p class="mt-3 text-sm text-[var(--text-2)] leading-7">{{ actionHint }}</p>
-                </div>
-                <div class="grid gap-3">
-                  <button type="button" class="ui-btn min-h-[42px] w-full bg-[#17b26a] px-4 text-sm text-white font-semibold transition hover:bg-[#109d5d] disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canPublish || saving || loading || actionLoading !== ''" @click="handlePostAction('publish')">
-                    {{ actionLoading === 'publish' ? '正在发布...' : '发布文章' }}
-                  </button>
-                  <button type="button" class="ui-btn ui-btn-secondary min-h-[42px] w-full px-4 text-sm" :disabled="!canUnpublish || saving || loading || actionLoading !== ''" @click="handlePostAction('unpublish')">
-                    {{ actionLoading === 'unpublish' ? '正在下线...' : '下线为草稿' }}
-                  </button>
-                  <button type="button" class="ui-btn min-h-[42px] w-full border border-[rgba(247,144,9,0.26)] bg-[#fff3e4] px-4 text-sm text-[#b26700] font-semibold transition hover:bg-[#ffe9ce] disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canArchive || saving || loading || actionLoading !== ''" @click="handlePostAction('archive')">
-                    {{ actionLoading === 'archive' ? '正在归档...' : '归档文章' }}
-                  </button>
-                </div>
+          <div class="admin-side-stack">
+            <section class="admin-side-card border-[rgba(76,139,245,0.18)] bg-[#eef4ff]">
+              <p class="text-xs text-[#235fc4]">当前状态</p>
+              <p class="mt-3 text-base text-[var(--text-1)] font-semibold">{{ currentStatusMeta.label }}</p>
+              <p class="mt-2 text-sm text-[var(--text-2)] leading-6">{{ currentStatusMeta.hint }}</p>
+            </section>
+
+            <section class="admin-side-card">
+              <p class="text-sm font-medium text-[var(--text-1)]">状态动作</p>
+              <p class="mt-2 text-sm text-[var(--text-3)] leading-7">{{ actionHint }}</p>
+              <div class="mt-4 grid gap-3">
+                <button type="button" class="ui-btn min-h-[42px] w-full bg-[#17b26a] px-4 text-sm text-white font-semibold transition hover:bg-[#109d5d] disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canPublish || saving || loading || actionLoading !== ''" @click="handlePostAction('publish')">
+                  {{ actionLoading === 'publish' ? '正在发布...' : '发布文章' }}
+                </button>
+                <button type="button" class="ui-btn ui-btn-secondary min-h-[42px] w-full px-4 text-sm" :disabled="!canUnpublish || saving || loading || actionLoading !== ''" @click="handlePostAction('unpublish')">
+                  {{ actionLoading === 'unpublish' ? '正在下线...' : '下线为草稿' }}
+                </button>
+                <button type="button" class="ui-btn min-h-[42px] w-full border border-[rgba(247,144,9,0.26)] bg-[#fff3e4] px-4 text-sm text-[#b26700] font-semibold transition hover:bg-[#ffe9ce] disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canArchive || saving || loading || actionLoading !== ''" @click="handlePostAction('archive')">
+                  {{ actionLoading === 'archive' ? '正在归档...' : '归档文章' }}
+                </button>
+              </div>
+            </section>
+
+            <section class="admin-side-card">
+              <p class="text-sm font-medium text-[var(--text-1)]">发布信息</p>
+              <div class="mt-4 grid gap-3 text-sm text-[var(--text-3)]">
                 <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
                   <p class="text-xs text-[var(--text-4)]">文章路径</p>
                   <p class="mt-3 break-all text-sm text-[var(--text-1)] leading-6">/{{ previewSlug }}</p>
@@ -472,7 +480,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                     <span v-for="tag in selectedTags" :key="tag.id" class="rounded-full border border-[rgba(76,139,245,0.2)] bg-[#eef4ff] px-3 py-1 text-xs font-medium text-[#235fc4]">{{ tag.name }}</span>
                   </div>
                 </div>
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+                <div class="grid gap-3">
                   <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
                     <p class="text-xs text-[var(--text-4)]">正文长度</p>
                     <p class="mt-3 text-sm text-[var(--text-1)]">{{ wordCount }} 字符</p>
@@ -489,7 +497,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
               </div>
             </section>
 
-            <section class="rounded-[24px] border border-dashed border-[rgba(76,139,245,0.22)] bg-[#f5f9ff] p-5 text-sm text-[var(--text-2)] leading-7">
+            <section class="admin-side-card border-dashed border-[rgba(76,139,245,0.22)] bg-[#f5f9ff] text-sm text-[var(--text-2)] leading-7">
               <h3 class="text-base text-[var(--text-1)] font-semibold">联调说明</h3>
               <ul class="mt-4 space-y-2">
                 <li>• 新建走 POST /api/admin/posts，编辑走 PATCH /api/admin/posts/:id。</li>

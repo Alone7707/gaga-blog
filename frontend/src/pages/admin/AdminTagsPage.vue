@@ -7,7 +7,6 @@ import {
   updateAdminTag,
 } from '../../api/taxonomy'
 import SectionCard from '../../components/common/SectionCard.vue'
-import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { AdminTagItem, AdminTagMutationPayload } from '../../types/taxonomy'
 
 interface TagFormState {
@@ -185,28 +184,29 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 
 <template>
   <div class="page-grid">
-    <PublicPageHero
-      kicker="Admin / Tags"
-      title="标签管理"
-      description="标签页延续后台清爽版工作流：先筛选话题词，再就地修正与补录，保证文章编辑页的标签选择始终可用。"
-      :meta="[
-        totalLabel,
-        '保持轻量录入体验',
-        topTag ? `最高频标签：${topTag.name}` : '等待首个标签',
-      ]"
-      aside-title="当前概览"
-      :aside-text="topTag ? `${topTag.name} 当前关联 ${topTag.postCount} 篇文章，可优先维护为热门话题标签。` : '当前还没有标签数据，可以先从右侧表单创建常用标签。'"
-      :aside-stats="[
-        { label: '已使用标签', value: usedCount },
-        { label: '空标签', value: emptyCount },
-      ]"
-    />
+    <SectionCard title="标签管理" description="左侧集中处理查询和列表，右侧表单保持常驻，方便边看边改。" variant="hero" size="lg">
+      <div class="admin-card-grid cols-3">
+        <article class="admin-overview-card admin-overview-card-primary">
+          <p class="editor-kicker">标签总量</p>
+          <p class="admin-overview-value">{{ tags.length }}</p>
+          <p class="mt-3 text-xs text-[var(--text-3)]">{{ totalLabel }}</p>
+        </article>
+        <article class="admin-overview-card admin-overview-card-success">
+          <p class="editor-kicker">已使用标签</p>
+          <p class="admin-overview-value">{{ usedCount }}</p>
+          <p class="mt-3 text-xs text-[var(--success)]">已关联文章的话题标签</p>
+        </article>
+        <article class="admin-overview-card">
+          <p class="editor-kicker">高频标签</p>
+          <p class="mt-4 text-lg text-[var(--text-1)] font-semibold leading-7">{{ topTag?.name || '等待首个标签' }}</p>
+          <p class="mt-3 text-xs text-[var(--text-3)]">空标签 {{ emptyCount }} 个</p>
+        </article>
+      </div>
 
-    <SectionCard title="标签工作区" description="左侧集中处理查询和列表，右侧表单保持常驻，方便边看边改。" variant="hero" size="lg">
-      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_360px]">
+      <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.28fr)_360px]">
         <div class="space-y-5">
-          <div class="rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 md:p-5">
-            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div class="admin-toolbar">
+            <div class="admin-toolbar-main grid gap-4 lg:grid-cols-[minmax(0,1fr)]">
               <label class="block">
                 <span class="mb-2 block text-sm text-[var(--text-2)]">搜索标签</span>
                 <input
@@ -217,18 +217,18 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                   @keyup.enter="handleSearch"
                 >
               </label>
-
-              <div class="flex flex-wrap gap-3 lg:justify-end">
-                <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleResetSearch">
-                  重置
-                </button>
-                <button type="button" class="ui-btn ui-btn-primary text-sm" @click="handleSearch">
-                  查询
-                </button>
-              </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-4)]">
+            <div class="admin-toolbar-actions">
+              <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleResetSearch">
+                重置
+              </button>
+              <button type="button" class="ui-btn ui-btn-primary text-sm" @click="handleSearch">
+                查询
+              </button>
+            </div>
+
+            <div class="admin-toolbar-meta">
               <span>{{ totalLabel }}</span>
               <span class="ui-badge">用于文章编辑页标签联动</span>
             </div>
@@ -248,53 +248,59 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             当前暂无标签，可先在右侧创建一个标签。
           </div>
           <div v-else class="space-y-4">
-            <article
-              v-for="tag in tags"
-              :key="tag.id"
-              class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5 transition hover:border-[rgba(76,139,245,0.18)] hover:shadow-[var(--shadow-xs)]"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-4">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h3 class="truncate text-[18px] text-[var(--text-1)] font-semibold leading-7">{{ tag.name }}</h3>
-                    <span class="ui-badge">/{{ tag.slug }}</span>
-                  </div>
-                  <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
-                    当前标签已关联 {{ tag.postCount }} 篇文章，适合作为内容横向串联入口。
-                  </p>
-                </div>
-                <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" @click="handleEdit(tag)">
-                  编辑
-                </button>
-              </div>
-
-              <div class="mt-4 grid gap-3 text-sm text-[var(--text-3)] md:grid-cols-2">
-                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3">
-                  <p class="text-xs text-[var(--text-4)]">关联文章</p>
-                  <p class="mt-2 text-[var(--text-1)] font-medium">{{ tag.postCount }} 篇</p>
-                </div>
-                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3">
-                  <p class="text-xs text-[var(--text-4)]">更新时间</p>
-                  <p class="mt-2 text-[var(--text-1)] font-medium editor-mono">{{ formatDateTime(tag.updatedAt) }}</p>
-                </div>
-              </div>
-            </article>
+            <div class="admin-table-wrap">
+              <table class="admin-data-table min-w-[760px]">
+                <thead>
+                  <tr>
+                    <th>标签信息</th>
+                    <th>关联文章</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="tag in tags" :key="tag.id">
+                    <td class="min-w-[320px]">
+                      <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <h3 class="truncate text-[16px] text-[var(--text-1)] font-semibold leading-7">{{ tag.name }}</h3>
+                          <span class="ui-badge">/{{ tag.slug }}</span>
+                        </div>
+                        <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
+                          当前标签已关联 {{ tag.postCount }} 篇文章，适合作为内容横向串联入口。
+                        </p>
+                      </div>
+                    </td>
+                    <td>{{ tag.postCount }} 篇</td>
+                    <td><span class="editor-mono text-sm text-[var(--text-3)]">{{ formatDateTime(tag.updatedAt) }}</span></td>
+                    <td>
+                      <button type="button" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs" @click="handleEdit(tag)">
+                        编辑
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div class="space-y-5">
-          <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
-            <div class="border-b border-[var(--line-soft)] pb-4">
-              <p class="editor-kicker">Tag Form</p>
-              <h3 class="mt-3 text-[22px] font-semibold text-[var(--text-1)]">
-                {{ isEditMode ? '编辑标签' : '新建标签' }}
-              </h3>
-              <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
-                标签维护保持单页完成，便于与文章编辑页的标签选择联动。
-              </p>
+        <div class="admin-side-stack">
+          <section class="admin-form-section">
+            <div class="admin-form-section-header">
+              <div>
+                <p class="editor-kicker">Tag Form</p>
+                <h3 class="mt-3 text-[22px] font-semibold text-[var(--text-1)]">
+                  {{ isEditMode ? '编辑标签' : '新建标签' }}
+                </h3>
+                <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
+                  标签维护保持单页完成，便于与文章编辑页的标签选择联动。
+                </p>
+              </div>
+              <span class="ui-badge">{{ isEditMode ? '编辑模式' : '创建模式' }}</span>
             </div>
 
-            <div class="mt-5 space-y-4">
+            <div class="admin-form-section-body space-y-4">
               <label class="block">
                 <span class="mb-2 block text-sm text-[var(--text-2)]">标签名称</span>
                 <input v-model="form.name" type="text" maxlength="50" placeholder="请输入标签名称" class="ui-input">
@@ -303,19 +309,19 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                 <span class="mb-2 block text-sm text-[var(--text-2)]">Slug</span>
                 <input v-model="form.slug" type="text" maxlength="80" placeholder="可选，留空时由后端自动生成" class="ui-input">
               </label>
-            </div>
 
-            <div class="mt-5 flex flex-wrap gap-3">
-              <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleResetForm">
-                {{ isEditMode ? '取消编辑' : '清空表单' }}
-              </button>
-              <button type="button" class="ui-btn ui-btn-primary text-sm" :disabled="saving" @click="handleSubmit">
-                {{ submitLabel }}
-              </button>
+              <div class="flex flex-wrap gap-3">
+                <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleResetForm">
+                  {{ isEditMode ? '取消编辑' : '清空表单' }}
+                </button>
+                <button type="button" class="ui-btn ui-btn-primary text-sm" :disabled="saving" @click="handleSubmit">
+                  {{ submitLabel }}
+                </button>
+              </div>
             </div>
           </section>
 
-          <section class="rounded-[24px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
+          <section class="admin-side-card border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] text-sm text-[var(--text-3)] leading-7">
             <p class="font-medium text-[var(--text-1)]">联调说明</p>
             <ul class="mt-3 space-y-2">
               <li>• 列表接口：GET /api/admin/tags</li>

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
@@ -13,7 +13,6 @@ import {
   replyAdminComment,
 } from '../../api/comments'
 import SectionCard from '../../components/common/SectionCard.vue'
-import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type {
   AdminCommentDetail,
   AdminCommentItem,
@@ -464,331 +463,322 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 
 <template>
   <div class="page-grid">
-    <PublicPageHero
-      kicker="Admin / Comment Review"
-      title="评论审核台"
-      description="把评论审核从旧版深色工作流切回清爽后台：先看状态分布，再处理列表，最后查看详情与回复链。"
-      :meta="[
-        selectedStatusLabel,
-        totalLabel,
-        stats?.latestComment ? `最近评论：${formatDateTime(stats.latestComment.createdAt)}` : '等待最新评论',
-      ]"
-      :actions="[
-        { label: '返回仪表盘', to: '/admin', variant: 'secondary' },
-        { label: '刷新评论', to: '/admin/comments', variant: 'ghost' },
-      ]"
-      aside-title="审核节奏"
-      :aside-text="pendingFirstHint"
-      :aside-stats="[
-        { label: '待审核', value: statsLoading ? '--' : String(stats?.pending ?? 0) },
-        { label: '已通过', value: statsLoading ? '--' : String(stats?.approved ?? 0) },
-      ]"
-    />
+    <SectionCard title="评论审核台" description="先看状态分布，再处理列表，最后查看详情与回复链，形成标准中后台审核工作流。" variant="hero" size="lg">
+      <template #action>
+        <div class="flex flex-wrap gap-3">
+          <button
+            type="button"
+            class="ui-btn ui-btn-secondary text-sm"
+            :disabled="listLoading || statsLoading"
+            @click="handleReset"
+          >
+            重置筛选
+          </button>
+          <button
+            type="button"
+            class="ui-btn ui-btn-primary text-sm"
+            :disabled="listLoading || statsLoading"
+            @click="refreshComments"
+          >
+            刷新评论
+          </button>
+        </div>
+      </template>
 
-    <SectionCard title="状态概览" description="统一使用浅色卡片展示评论池状态，帮助先做优先级判断。" variant="panel">
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="admin-card-grid cols-4">
         <div
           v-for="item in statCards"
           :key="item.label"
-          class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5"
+          class="admin-overview-card"
         >
           <p class="text-sm text-[var(--text-3)]">{{ item.label }}</p>
-          <p class="mt-4 text-[34px] font-semibold text-[var(--text-1)]">{{ statsLoading ? '--' : item.value }}</p>
+          <p class="admin-overview-value">{{ statsLoading ? '--' : item.value }}</p>
           <p class="mt-3 text-sm text-[var(--text-3)] leading-6">{{ item.hint }}</p>
         </div>
       </div>
-    </SectionCard>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
-      <SectionCard title="评论列表" description="左侧处理筛选、列表和分页，保持单页审核闭环。" variant="hero" size="lg">
-        <template #action>
-          <div class="flex flex-wrap gap-3">
-            <button
-              type="button"
-              class="ui-btn ui-btn-secondary text-sm"
-              :disabled="listLoading || statsLoading"
-              @click="handleReset"
-            >
-              重置筛选
-            </button>
-            <button
-              type="button"
-              class="ui-btn ui-btn-primary text-sm"
-              :disabled="listLoading || statsLoading"
-              @click="refreshComments"
-            >
-              刷新评论
-            </button>
-          </div>
-        </template>
-
-        <div class="space-y-5">
-          <div class="flex flex-wrap gap-3">
-            <button
-              v-for="option in statusOptions"
-              :key="option.value || 'all'"
-              type="button"
-              class="rounded-full border px-4 py-2 text-sm transition"
-              :class="queryForm.status === option.value
-                ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] text-[var(--text-1)]'
-                : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]'"
-              @click="handleStatusTabClick(option.value)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-
-          <div class="grid gap-4 rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 lg:grid-cols-[minmax(0,1.6fr)_220px_auto] lg:items-end">
-            <label class="block">
-              <span class="mb-2 block text-sm text-[var(--text-3)]">搜索评论</span>
-              <input
-                v-model="queryForm.keyword"
-                type="text"
-                placeholder="输入评论人、邮箱、内容或文章标题关键词"
-                class="ui-input"
-                @keyup.enter="handleSearch"
+      <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_400px]">
+        <SectionCard title="评论列表" description="左侧处理状态切换、筛选、列表和分页。" variant="panel">
+          <div class="space-y-5">
+            <div class="flex flex-wrap gap-3">
+              <button
+                v-for="option in statusOptions"
+                :key="option.value || 'all'"
+                type="button"
+                class="rounded-full border px-4 py-2 text-sm transition"
+                :class="queryForm.status === option.value
+                  ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] text-[var(--text-1)]'
+                  : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]'"
+                @click="handleStatusTabClick(option.value)"
               >
-            </label>
+                {{ option.label }}
+              </button>
+            </div>
 
-            <label class="block">
-              <span class="mb-2 block text-sm text-[var(--text-3)]">当前筛选</span>
-              <div class="ui-input flex items-center bg-white text-sm text-[var(--text-2)]">
-                {{ selectedStatusLabel }}
+            <div class="admin-toolbar">
+              <div class="admin-toolbar-main grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_220px]">
+                <label class="block">
+                  <span class="mb-2 block text-sm text-[var(--text-3)]">搜索评论</span>
+                  <input
+                    v-model="queryForm.keyword"
+                    type="text"
+                    placeholder="输入评论人、邮箱、内容或文章标题关键词"
+                    class="ui-input"
+                    @keyup.enter="handleSearch"
+                  >
+                </label>
+
+                <label class="block">
+                  <span class="mb-2 block text-sm text-[var(--text-3)]">当前筛选</span>
+                  <div class="ui-input flex items-center bg-white text-sm text-[var(--text-2)]">
+                    {{ selectedStatusLabel }}
+                  </div>
+                </label>
               </div>
-            </label>
 
-            <button
-              type="button"
-              class="ui-btn ui-btn-primary text-sm"
-              @click="handleSearch"
-            >
-              查询评论
-            </button>
+              <div class="admin-toolbar-actions">
+                <button
+                  type="button"
+                  class="ui-btn ui-btn-primary text-sm"
+                  @click="handleSearch"
+                >
+                  查询评论
+                </button>
+              </div>
+
+              <div class="admin-toolbar-meta">
+                <div class="flex flex-wrap items-center gap-3">
+                  <span>{{ totalLabel }}</span>
+                  <span class="ui-badge">默认优先待审核</span>
+                </div>
+                <span>{{ pendingFirstHint }}</span>
+              </div>
+            </div>
+
+            <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
+              {{ successMessage }}
+            </div>
+            <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+              {{ errorMessage }}
+            </div>
+
+            <div v-if="listLoading" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+              正在加载评论列表...
+            </div>
+
+            <div v-else-if="!hasData" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+              当前暂无符合条件的评论。
+            </div>
+
+            <div v-else class="space-y-4">
+              <article
+                v-for="comment in comments"
+                :key="comment.id"
+                class="cursor-pointer rounded-[22px] border p-5 transition"
+                :class="selectedCommentId === comment.id
+                  ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] shadow-[var(--shadow-sm)]'
+                  : 'border-[var(--line-soft)] bg-white hover:-translate-y-[1px] hover:border-[rgba(76,139,245,0.22)] hover:shadow-[var(--shadow-sm)]'"
+                @click="handleSelectComment(comment.id)"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2 text-sm font-medium text-[var(--text-1)]">
+                      <span>{{ comment.authorName }}</span>
+                      <span class="text-xs text-[var(--text-3)]">{{ maskEmail(comment.authorEmail) }}</span>
+                    </div>
+                    <p class="mt-3 line-clamp-3 text-sm text-[var(--text-3)] leading-7">
+                      {{ comment.content }}
+                    </p>
+                  </div>
+                  <span class="ui-badge" :class="getCommentStatusClass(comment.status)">
+                    {{ getCommentStatusLabel(comment.status) }}
+                  </span>
+                </div>
+
+                <div class="mt-4 grid gap-3 text-xs text-[var(--text-3)] md:grid-cols-2">
+                  <p>所属文章：{{ comment.post.title }}</p>
+                  <p>提交时间：{{ formatDateTime(comment.createdAt) }}</p>
+                  <p>回复概览：{{ comment.approvedReplyCount }} / {{ comment.replyCount }}</p>
+                  <p>审核人：{{ comment.reviewedBy?.displayName ?? '未审核' }}</p>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-2" @click.stop>
+                  <button
+                    type="button"
+                    class="rounded-full border px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50"
+                    :class="getActionButtonClass('approve')"
+                    :disabled="actionLoadingId === comment.id || comment.status === 'APPROVED'"
+                    @click="handleReviewAction(comment, 'approve')"
+                  >
+                    {{ actionLoadingId === comment.id ? '处理中...' : '通过' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-full border px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50"
+                    :class="getActionButtonClass('reject')"
+                    :disabled="actionLoadingId === comment.id || comment.status === 'REJECTED'"
+                    @click="handleReviewAction(comment, 'reject')"
+                  >
+                    驳回
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-full border px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50"
+                    :class="getActionButtonClass('spam')"
+                    :disabled="actionLoadingId === comment.id || comment.status === 'SPAM'"
+                    @click="handleReviewAction(comment, 'spam')"
+                  >
+                    标记垃圾
+                  </button>
+                  <RouterLink
+                    :to="`/posts/${comment.post.slug}`"
+                    target="_blank"
+                    class="rounded-full border border-[var(--line-soft)] bg-white px-3 py-1.5 text-xs text-[var(--text-3)] transition hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]"
+                  >
+                    查看文章
+                  </RouterLink>
+                </div>
+              </article>
+            </div>
+
+            <div class="flex flex-col gap-3 border-t border-[var(--line-soft)] pt-5 text-sm text-[var(--text-3)] md:flex-row md:items-center md:justify-between">
+              <p>第 {{ pagination.page }} / {{ Math.max(pagination.totalPages, 1) }} 页</p>
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="pagination.page <= 1"
+                  @click="handlePageChange(pagination.page - 1)"
+                >
+                  上一页
+                </button>
+                <button
+                  type="button"
+                  class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="pagination.page >= Math.max(pagination.totalPages, 1)"
+                  @click="handlePageChange(pagination.page + 1)"
+                >
+                  下一页
+                </button>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="评论详情" description="右侧固定承接当前评论详情、父评论和回复链。" variant="dashed">
+          <div v-if="detailLoading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+            正在加载评论详情...
           </div>
 
-          <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
-            {{ successMessage }}
-          </div>
-          <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
-            {{ errorMessage }}
-          </div>
-
-          <div v-if="listLoading" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
-            正在加载评论列表...
-          </div>
-
-          <div v-else-if="!hasData" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
-            当前暂无符合条件的评论。
+          <div v-else-if="!selectedCommentDetail" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+            请选择一条评论查看详情。
           </div>
 
           <div v-else class="space-y-4">
-            <article
-              v-for="comment in comments"
-              :key="comment.id"
-              class="cursor-pointer rounded-[22px] border p-5 transition"
-              :class="selectedCommentId === comment.id
-                ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] shadow-[var(--shadow-sm)]'
-                : 'border-[var(--line-soft)] bg-white hover:-translate-y-[1px] hover:border-[rgba(76,139,245,0.22)] hover:shadow-[var(--shadow-sm)]'"
-              @click="handleSelectComment(comment.id)"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2 text-sm font-medium text-[var(--text-1)]">
-                    <span>{{ comment.authorName }}</span>
-                    <span class="text-xs text-[var(--text-3)]">{{ maskEmail(comment.authorEmail) }}</span>
-                  </div>
-                  <p class="mt-3 line-clamp-3 text-sm text-[var(--text-3)] leading-7">
-                    {{ comment.content }}
-                  </p>
+            <div class="admin-side-card">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p class="text-lg font-semibold text-[var(--text-1)]">{{ selectedCommentDetail.authorName }}</p>
+                  <p class="mt-1 text-sm text-[var(--text-4)]">{{ maskEmail(selectedCommentDetail.authorEmail) }}</p>
                 </div>
-                <span class="ui-badge" :class="getCommentStatusClass(comment.status)">
-                  {{ getCommentStatusLabel(comment.status) }}
+                <span class="ui-badge" :class="getCommentStatusClass(selectedCommentDetail.status)">
+                  {{ getCommentStatusLabel(selectedCommentDetail.status) }}
                 </span>
               </div>
 
-              <div class="mt-4 grid gap-3 text-xs text-[var(--text-3)] md:grid-cols-2">
-                <p>所属文章：{{ comment.post.title }}</p>
-                <p>提交时间：{{ formatDateTime(comment.createdAt) }}</p>
-                <p>回复概览：{{ comment.approvedReplyCount }} / {{ comment.replyCount }}</p>
-                <p>审核人：{{ comment.reviewedBy?.displayName ?? '未审核' }}</p>
+              <div class="mt-4 rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                <p class="text-sm text-[var(--text-2)] leading-7">{{ selectedCommentDetail.content }}</p>
               </div>
 
-              <div class="mt-4 flex flex-wrap gap-2" @click.stop>
-                <button
-                  type="button"
-                  class="rounded-full border px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50"
-                  :class="getActionButtonClass('approve')"
-                  :disabled="actionLoadingId === comment.id || comment.status === 'APPROVED'"
-                  @click="handleReviewAction(comment, 'approve')"
-                >
-                  {{ actionLoadingId === comment.id ? '处理中...' : '通过' }}
-                </button>
-                <button
-                  type="button"
-                  class="rounded-full border px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50"
-                  :class="getActionButtonClass('reject')"
-                  :disabled="actionLoadingId === comment.id || comment.status === 'REJECTED'"
-                  @click="handleReviewAction(comment, 'reject')"
-                >
-                  驳回
-                </button>
-                <button
-                  type="button"
-                  class="rounded-full border px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50"
-                  :class="getActionButtonClass('spam')"
-                  :disabled="actionLoadingId === comment.id || comment.status === 'SPAM'"
-                  @click="handleReviewAction(comment, 'spam')"
-                >
-                  标记垃圾
-                </button>
-                <RouterLink
-                  :to="`/posts/${comment.post.slug}`"
-                  target="_blank"
-                  class="rounded-full border border-[var(--line-soft)] bg-white px-3 py-1.5 text-xs text-[var(--text-3)] transition hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]"
-                >
-                  查看文章
-                </RouterLink>
+              <div class="mt-4 grid gap-3 text-sm text-[var(--text-3)]">
+                <p>所属文章：<span class="text-[var(--text-1)]">{{ selectedCommentDetail.post.title }}</span></p>
+                <p>提交时间：<span class="text-[var(--text-1)]">{{ formatDateTime(selectedCommentDetail.createdAt) }}</span></p>
+                <p>审核时间：<span class="text-[var(--text-1)]">{{ formatDateTime(selectedCommentDetail.approvedAt) }}</span></p>
+                <p>审核备注：<span class="text-[var(--text-1)]">{{ selectedCommentDetail.reviewReason || '暂无备注' }}</span></p>
+                <p>评论网址：<span class="break-all text-[var(--text-1)]">{{ selectedCommentDetail.authorWebsite || '未填写' }}</span></p>
+                <p>来源标识：<span class="break-all text-[var(--text-1)]">{{ selectedCommentDetail.ipHash || '无' }}</span></p>
               </div>
-            </article>
-          </div>
-
-          <div class="flex flex-col gap-3 border-t border-[var(--line-soft)] pt-5 text-sm text-[var(--text-3)] md:flex-row md:items-center md:justify-between">
-            <p>第 {{ pagination.page }} / {{ Math.max(pagination.totalPages, 1) }} 页</p>
-            <div class="flex items-center gap-3">
-              <button
-                type="button"
-                class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="pagination.page <= 1"
-                @click="handlePageChange(pagination.page - 1)"
-              >
-                上一页
-              </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="pagination.page >= Math.max(pagination.totalPages, 1)"
-                @click="handlePageChange(pagination.page + 1)"
-              >
-                下一页
-              </button>
-            </div>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="评论详情" description="右侧固定承接当前评论详情、父评论和回复链，减少切页损耗。" variant="dashed">
-        <div v-if="detailLoading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
-          正在加载评论详情...
-        </div>
-
-        <div v-else-if="!selectedCommentDetail" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
-          请选择一条评论查看详情。
-        </div>
-
-        <div v-else class="space-y-4">
-          <div class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p class="text-lg font-semibold text-[var(--text-1)]">{{ selectedCommentDetail.authorName }}</p>
-                <p class="mt-1 text-sm text-[var(--text-4)]">{{ maskEmail(selectedCommentDetail.authorEmail) }}</p>
-              </div>
-              <span class="ui-badge" :class="getCommentStatusClass(selectedCommentDetail.status)">
-                {{ getCommentStatusLabel(selectedCommentDetail.status) }}
-              </span>
             </div>
 
-            <div class="mt-4 rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
-              <p class="text-sm text-[var(--text-2)] leading-7">{{ selectedCommentDetail.content }}</p>
+            <div v-if="selectedCommentDetail.parent" class="admin-side-card border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)]">
+              <p class="text-sm font-medium text-[var(--text-1)]">父评论</p>
+              <p class="mt-2 text-xs text-[var(--text-3)]">{{ selectedCommentDetail.parent.authorName }}</p>
+              <p class="mt-3 text-sm text-[var(--text-3)] leading-7">{{ selectedCommentDetail.parent.content }}</p>
             </div>
 
-            <div class="mt-4 grid gap-3 text-sm text-[var(--text-3)]">
-              <p>所属文章：<span class="text-[var(--text-1)]">{{ selectedCommentDetail.post.title }}</span></p>
-              <p>提交时间：<span class="text-[var(--text-1)]">{{ formatDateTime(selectedCommentDetail.createdAt) }}</span></p>
-              <p>审核时间：<span class="text-[var(--text-1)]">{{ formatDateTime(selectedCommentDetail.approvedAt) }}</span></p>
-              <p>审核备注：<span class="text-[var(--text-1)]">{{ selectedCommentDetail.reviewReason || '暂无备注' }}</span></p>
-              <p>评论网址：<span class="break-all text-[var(--text-1)]">{{ selectedCommentDetail.authorWebsite || '未填写' }}</span></p>
-              <p>来源标识：<span class="break-all text-[var(--text-1)]">{{ selectedCommentDetail.ipHash || '无' }}</span></p>
-            </div>
-          </div>
-
-          <div v-if="selectedCommentDetail.parent" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
-            <p class="text-sm font-medium text-[var(--text-1)]">父评论</p>
-            <p class="mt-2 text-xs text-[var(--text-3)]">{{ selectedCommentDetail.parent.authorName }}</p>
-            <p class="mt-3 text-sm text-[var(--text-3)] leading-7">{{ selectedCommentDetail.parent.content }}</p>
-          </div>
-
-          <div class="rounded-[22px] border border-[var(--line-soft)] bg-white p-4">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <p class="text-sm font-medium text-[var(--text-1)]">管理员回复</p>
-                <p class="mt-1 text-xs text-[var(--text-4)]">
-                  直接为当前评论补一条单层回复，默认立即公开展示。
-                </p>
-              </div>
-              <span class="ui-badge ui-badge-status-approved">{{ profile?.displayName ?? '管理员' }}</span>
-            </div>
-
-            <div v-if="!canReplySelectedComment" class="mt-4 rounded-[18px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3 text-sm text-[var(--text-3)]">
-              当前评论本身就是回复，暂不支持继续向下嵌套回复。
-            </div>
-            <form v-else class="mt-4 space-y-4" @submit.prevent="handleReplySubmit">
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">回复内容</span>
-                <textarea
-                  v-model="replyForm.content"
-                  class="ui-input min-h-[120px] resize-y"
-                  placeholder="输入管理员回复内容，提交后将直接出现在前台已审核回复中。"
-                  maxlength="1000"
-                />
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">回复备注（可选）</span>
-                <input
-                  v-model="replyForm.reason"
-                  type="text"
-                  class="ui-input"
-                  maxlength="200"
-                  placeholder="仅后台可见，可用于记录本次回复说明。"
-                >
-              </label>
-              <div class="flex flex-wrap gap-3">
-                <button type="submit" class="ui-btn ui-btn-primary text-sm" :disabled="replySubmitting || !selectedCommentDetail.id">
-                  {{ replySubmitting ? '回复中...' : '发布管理员回复' }}
-                </button>
-                <button type="button" class="ui-btn ui-btn-secondary text-sm" :disabled="replySubmitting" @click="resetReplyForm">
-                  清空内容
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div class="rounded-[22px] border border-[var(--line-soft)] bg-white p-4">
-            <div class="flex items-center justify-between gap-3">
-              <p class="text-sm font-medium text-[var(--text-1)]">已通过回复</p>
-              <span class="text-xs text-[var(--text-3)]">{{ selectedCommentDetail.replies.length }} 条</span>
-            </div>
-            <div v-if="selectedCommentDetail.replies.length === 0" class="mt-3 text-sm text-[var(--text-3)]">
-              当前暂无回复。
-            </div>
-            <div v-else class="mt-3 space-y-3">
-              <article
-                v-for="reply in selectedCommentDetail.replies"
-                :key="reply.id"
-                class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-3"
-              >
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <span class="text-sm font-medium text-[var(--text-1)]">{{ reply.authorName }}</span>
-                  <span class="ui-badge" :class="getCommentStatusClass(reply.status)">
-                    {{ getCommentStatusLabel(reply.status) }}
-                  </span>
+            <div class="admin-side-card">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium text-[var(--text-1)]">管理员回复</p>
+                  <p class="mt-1 text-xs text-[var(--text-4)]">
+                    直接为当前评论补一条单层回复，默认立即公开展示。
+                  </p>
                 </div>
-                <p class="mt-3 text-sm text-[var(--text-3)] leading-6">{{ reply.content }}</p>
-                <p class="mt-3 text-xs text-[var(--text-3)]">{{ formatDateTime(reply.createdAt) }}</p>
-              </article>
+                <span class="ui-badge ui-badge-status-approved">{{ profile?.displayName ?? '管理员' }}</span>
+              </div>
+
+              <div v-if="!canReplySelectedComment" class="mt-4 rounded-[18px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3 text-sm text-[var(--text-3)]">
+                当前评论本身就是回复，暂不支持继续向下嵌套回复。
+              </div>
+              <form v-else class="mt-4 space-y-4" @submit.prevent="handleReplySubmit">
+                <label class="block">
+                  <span class="mb-2 block text-sm text-[var(--text-3)]">回复内容</span>
+                  <textarea
+                    v-model="replyForm.content"
+                    class="ui-input min-h-[120px] resize-y"
+                    placeholder="输入管理员回复内容，提交后将直接出现在前台已审核回复中。"
+                    maxlength="1000"
+                  />
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-sm text-[var(--text-3)]">回复备注（可选）</span>
+                  <input
+                    v-model="replyForm.reason"
+                    type="text"
+                    class="ui-input"
+                    maxlength="200"
+                    placeholder="仅后台可见，可用于记录本次回复说明。"
+                  >
+                </label>
+                <div class="flex flex-wrap gap-3">
+                  <button type="submit" class="ui-btn ui-btn-primary text-sm" :disabled="replySubmitting || !selectedCommentDetail.id">
+                    {{ replySubmitting ? '回复中...' : '发布管理员回复' }}
+                  </button>
+                  <button type="button" class="ui-btn ui-btn-secondary text-sm" :disabled="replySubmitting" @click="resetReplyForm">
+                    清空内容
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="admin-side-card">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-sm font-medium text-[var(--text-1)]">已通过回复</p>
+                <span class="text-xs text-[var(--text-3)]">{{ selectedCommentDetail.replies.length }} 条</span>
+              </div>
+              <div v-if="selectedCommentDetail.replies.length === 0" class="mt-3 text-sm text-[var(--text-3)]">
+                当前暂无回复。
+              </div>
+              <div v-else class="mt-3 space-y-3">
+                <article
+                  v-for="reply in selectedCommentDetail.replies"
+                  :key="reply.id"
+                  class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-3"
+                >
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-sm font-medium text-[var(--text-1)]">{{ reply.authorName }}</span>
+                    <span class="ui-badge" :class="getCommentStatusClass(reply.status)">
+                      {{ getCommentStatusLabel(reply.status) }}
+                    </span>
+                  </div>
+                  <p class="mt-3 text-sm text-[var(--text-3)] leading-6">{{ reply.content }}</p>
+                  <p class="mt-3 text-xs text-[var(--text-3)]">{{ formatDateTime(reply.createdAt) }}</p>
+                </article>
+              </div>
             </div>
           </div>
-        </div>
-      </SectionCard>
-    </div>
+        </SectionCard>
+      </div>
+    </SectionCard>
   </div>
 </template>

@@ -225,7 +225,7 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
   <div class="page-grid">
     <SectionCard
       title="文章管理"
-      description="后台最核心的工作页。首轮已补齐独立发布动作，状态切换不再依赖保存表单。"
+      description="后台最高频工作页。重点强化筛选条、表格工作区和操作层级，让状态切换更像标准中后台。"
       variant="hero"
       size="lg"
     >
@@ -235,23 +235,23 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
         </RouterLink>
       </template>
 
-      <div class="grid gap-4 xl:grid-cols-4">
-        <article class="rounded-[22px] border border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f8fbff,#ffffff)] p-5">
+      <div class="admin-card-grid cols-4">
+        <article class="admin-overview-card admin-overview-card-primary">
           <p class="editor-kicker">文章总量</p>
-          <p class="mt-4 text-[38px] text-[var(--text-1)] font-semibold">{{ pagination.total }}</p>
+          <p class="admin-overview-value">{{ pagination.total }}</p>
           <p class="mt-3 text-xs text-[var(--text-3)]">覆盖当前筛选条件下的内容范围</p>
         </article>
-        <article class="rounded-[22px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#fbfcfe)] p-5">
+        <article class="admin-overview-card">
           <p class="editor-kicker">草稿</p>
-          <p class="mt-4 text-[38px] text-[var(--text-1)] font-semibold">{{ draftCount }}</p>
+          <p class="admin-overview-value">{{ draftCount }}</p>
           <p class="mt-3 text-xs text-[var(--text-3)]">仍需编辑或待发布的文章</p>
         </article>
-        <article class="rounded-[22px] border border-[rgba(18,183,106,0.14)] bg-[linear-gradient(180deg,#f4fdf8,#ffffff)] p-5">
+        <article class="admin-overview-card admin-overview-card-success">
           <p class="editor-kicker">已发布</p>
-          <p class="mt-4 text-[38px] text-[var(--text-1)] font-semibold">{{ publishedCount }}</p>
+          <p class="admin-overview-value">{{ publishedCount }}</p>
           <p class="mt-3 text-xs text-[var(--success)]">当前对外可见的公开内容</p>
         </article>
-        <article class="rounded-[22px] border border-[rgba(247,144,9,0.14)] bg-[linear-gradient(180deg,#fffaf2,#ffffff)] p-5">
+        <article class="admin-overview-card admin-overview-card-warning">
           <p class="editor-kicker">最近更新</p>
           <p class="mt-4 text-base text-[var(--text-1)] font-semibold leading-7">
             {{ formatDateTime(latestUpdatedAt) }}
@@ -260,8 +260,8 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
         </article>
       </div>
 
-      <div class="mt-6 rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 md:p-5">
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_220px_auto] xl:items-end">
+      <div class="admin-toolbar mt-6">
+        <div class="admin-toolbar-main grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_220px] xl:flex-none">
           <label class="block">
             <span class="mb-2 block text-sm text-[var(--text-2)]">搜索文章</span>
             <input
@@ -281,29 +281,29 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
               </option>
             </select>
           </label>
-
-          <div class="flex flex-wrap gap-3 xl:justify-end">
-            <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleReset">
-              重置
-            </button>
-            <button type="button" class="ui-btn ui-btn-primary text-sm" @click="handleSearch">
-              查询
-            </button>
-          </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-4)]">
+        <div class="admin-toolbar-actions">
+          <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleReset">
+            重置
+          </button>
+          <button type="button" class="ui-btn ui-btn-primary text-sm" @click="handleSearch">
+            查询
+          </button>
+        </div>
+
+        <div class="admin-toolbar-meta">
           <div class="flex flex-wrap items-center gap-3">
             <span>{{ totalLabel }}</span>
-            <span class="ui-badge">分类筛选下一轮再接入</span>
             <span class="ui-badge">已接独立发布动作</span>
+            <span class="ui-badge">新建 / 编辑统一归属文章管理</span>
           </div>
           <p class="editor-mono">默认按最近更新时间倒序展示</p>
         </div>
       </div>
     </SectionCard>
 
-    <SectionCard title="文章列表" description="标题作为主视觉，状态、分类、更新时间围绕它组织。" variant="panel">
+    <SectionCard title="文章列表" description="标题、状态、时间和操作按钮分层排列，采用更接近中后台工作表格的结构。" variant="panel">
       <div v-if="successMessage" class="mb-4 rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
         {{ successMessage }}
       </div>
@@ -323,59 +323,72 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
       </div>
 
       <div v-else class="space-y-4">
-        <article
-          v-for="post in posts"
-          :key="post.id"
-          class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-5 transition hover:border-[rgba(76,139,245,0.18)] hover:shadow-[var(--shadow-xs)]"
-        >
-          <div class="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_180px_180px_280px] xl:items-start">
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <h3 class="truncate text-[18px] text-[var(--text-1)] font-semibold leading-7">{{ post.title }}</h3>
-                <span :class="getStatusClass(post.status)">
-                  {{ getStatusLabel(post.status) }}
-                </span>
-              </div>
-              <p class="mt-2 text-xs text-[var(--text-3)] editor-mono">/{{ post.slug }}</p>
-              <p class="mt-3 line-clamp-2 text-sm text-[var(--text-3)] leading-7">
-                {{ post.summary || '暂无摘要，后续可在编辑页补充。' }}
-              </p>
-              <div class="mt-4 flex flex-wrap gap-2 text-xs text-[var(--text-3)]">
-                <span class="ui-badge">分类：{{ post.category?.name || '未分类' }}</span>
-                <span class="ui-badge">标签 {{ post.counts?.tags ?? 0 }}</span>
-                <span class="ui-badge">评论 {{ post.counts?.comments ?? 0 }}</span>
-              </div>
-            </div>
-
-            <div class="text-sm text-[var(--text-3)] leading-7">
-              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-3)]">更新时间</p>
-              <p class="mt-2 editor-mono">{{ formatDateTime(post.updatedAt ?? null) }}</p>
-            </div>
-
-            <div class="text-sm text-[var(--text-3)] leading-7">
-              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-3)]">发布时间</p>
-              <p class="mt-2 editor-mono">{{ formatDateTime(post.publishedAt ?? null) }}</p>
-            </div>
-
-            <div class="flex flex-wrap gap-2 xl:justify-end">
-              <RouterLink :to="`/admin/posts/${post.id}/edit`" class="ui-btn ui-btn-primary min-h-[38px] px-4 text-sm">
-                编辑
-              </RouterLink>
-              <RouterLink :to="`/posts/${post.slug}`" target="_blank" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm">
-                预览
-              </RouterLink>
-              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" :disabled="!canPublish(post) || isActionPending(post.id)" @click="handlePostAction(post, 'publish')">
-                {{ isActionPending(post.id) ? '处理中...' : '发布' }}
-              </button>
-              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" :disabled="!canUnpublish(post) || isActionPending(post.id)" @click="handlePostAction(post, 'unpublish')">
-                {{ isActionPending(post.id) ? '处理中...' : '下线' }}
-              </button>
-              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" :disabled="!canArchive(post) || isActionPending(post.id)" @click="handlePostAction(post, 'archive')">
-                {{ isActionPending(post.id) ? '处理中...' : '归档' }}
-              </button>
-            </div>
-          </div>
-        </article>
+        <div class="admin-table-wrap">
+          <table class="admin-data-table min-w-[1120px]">
+            <thead>
+              <tr>
+                <th>文章信息</th>
+                <th>分类 / 标签</th>
+                <th>状态</th>
+                <th>更新时间</th>
+                <th>发布时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="post in posts" :key="post.id">
+                <td class="min-w-[320px]">
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="truncate text-[16px] text-[var(--text-1)] font-semibold leading-7">{{ post.title }}</h3>
+                    </div>
+                    <p class="mt-2 text-xs text-[var(--text-3)] editor-mono">/{{ post.slug }}</p>
+                    <p class="mt-3 line-clamp-2 text-sm text-[var(--text-3)] leading-7">
+                      {{ post.summary || '暂无摘要，后续可在编辑页补充。' }}
+                    </p>
+                  </div>
+                </td>
+                <td class="min-w-[180px]">
+                  <div class="flex flex-wrap gap-2 text-xs text-[var(--text-3)]">
+                    <span class="ui-badge">分类：{{ post.category?.name || '未分类' }}</span>
+                    <span class="ui-badge">标签 {{ post.counts?.tags ?? 0 }}</span>
+                    <span class="ui-badge">评论 {{ post.counts?.comments ?? 0 }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span :class="getStatusClass(post.status)">
+                    {{ getStatusLabel(post.status) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="editor-mono text-sm text-[var(--text-3)]">{{ formatDateTime(post.updatedAt ?? null) }}</span>
+                </td>
+                <td>
+                  <span class="editor-mono text-sm text-[var(--text-3)]">{{ formatDateTime(post.publishedAt ?? null) }}</span>
+                </td>
+                <td class="min-w-[280px]">
+                  <div class="flex flex-wrap gap-2">
+                    <RouterLink :to="`/admin/posts/${post.id}/edit`" class="ui-btn ui-btn-primary min-h-[36px] px-4 text-xs">
+                      编辑
+                    </RouterLink>
+                    <RouterLink :to="`/posts/${post.slug}`" target="_blank" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs">
+                      预览
+                    </RouterLink>
+                    <button type="button" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs" :disabled="!canPublish(post) || isActionPending(post.id)" @click="handlePostAction(post, 'publish')">
+                      {{ isActionPending(post.id) ? '处理中...' : '发布' }}
+                    </button>
+                    <button type="button" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs" :disabled="!canUnpublish(post) || isActionPending(post.id)" @click="handlePostAction(post, 'unpublish')">
+                      {{ isActionPending(post.id) ? '处理中...' : '下线' }}
+                    </button>
+                    <button type="button" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs" :disabled="!canArchive(post) || isActionPending(post.id)" @click="handlePostAction(post, 'archive')">
+                      {{ isActionPending(post.id) ? '处理中...' : '归档' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="mt-5 flex flex-col gap-3 border-t border-[var(--line-soft)] pt-5 text-sm text-[var(--text-3)] md:flex-row md:items-center md:justify-between">

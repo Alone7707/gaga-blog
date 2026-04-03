@@ -137,18 +137,18 @@ function getCommentStatusClass(status: AdminDashboardRecentCommentItem['status']
 
 function getStatCardClass(tone: StatCardItem['tone']) {
   if (tone === 'info') {
-    return 'border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f8fbff,#ffffff)]'
+    return 'admin-overview-card admin-overview-card-primary'
   }
 
   if (tone === 'success') {
-    return 'border-[rgba(18,183,106,0.14)] bg-[linear-gradient(180deg,#f4fdf8,#ffffff)]'
+    return 'admin-overview-card admin-overview-card-success'
   }
 
   if (tone === 'warning') {
-    return 'border-[rgba(247,144,9,0.14)] bg-[linear-gradient(180deg,#fffaf2,#ffffff)]'
+    return 'admin-overview-card admin-overview-card-warning'
   }
 
-  return 'border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#fbfcfe)]'
+  return 'admin-overview-card'
 }
 
 function formatDateTime(value: string | null) {
@@ -188,7 +188,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
   <div class="page-grid">
     <SectionCard
       title="后台仪表盘"
-      description="首页先回答三个问题：站点现在状态如何、哪些事项需要立刻处理、下一步最常做的动作是什么。"
+      description="首页先回答三个问题：站点状态如何、哪里需要优先处理、接下来最常用的动作是什么。"
       variant="hero"
       size="lg"
     >
@@ -211,7 +211,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
       </div>
 
       <div v-else-if="errorMessage" class="space-y-4">
-        <p class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+        <p class="rounded-[18px] border border-[var(--line-danger-panel)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
           {{ errorMessage }}
         </p>
         <button type="button" class="ui-btn ui-btn-primary text-sm" @click="loadDashboardOverview">
@@ -220,45 +220,22 @@ function resolveErrorMessage(error: unknown, fallback: string) {
       </div>
 
       <div v-else-if="overview" class="space-y-6">
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <article
-              v-for="item in statCards"
-              :key="item.label"
-              class="rounded-[22px] border p-5 shadow-[var(--shadow-xs)]"
-              :class="getStatCardClass(item.tone)"
-            >
-              <p class="text-sm text-[var(--text-3)]">{{ item.label }}</p>
-              <p class="mt-4 text-[40px] font-semibold text-[var(--text-1)]">{{ item.value }}</p>
-              <p class="mt-3 text-xs leading-6" :class="item.tone === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'">
-                {{ item.hint }}
-              </p>
-            </article>
-          </div>
-
-          <div class="rounded-[24px] border border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f7fbff,#ffffff)] p-5">
-            <p class="editor-kicker">待处理事项</p>
-            <h3 class="mt-3 text-[24px] text-[var(--text-1)] font-semibold leading-tight">
-              {{ pendingCommentCount > 0 ? '评论审核需要优先处理' : '当前待处理事项较少' }}
-            </h3>
-            <p class="mt-4 text-sm text-[var(--text-3)] leading-7">
-              {{ pendingCommentCount > 0
-                ? `目前有 ${pendingCommentCount} 条评论待审核，建议先完成审核，再处理内容更新。`
-                : '评论池暂时平稳，可以继续发布内容或检查设置项。' }}
+        <div class="admin-card-grid cols-4">
+          <article
+            v-for="item in statCards"
+            :key="item.label"
+            :class="getStatCardClass(item.tone)"
+          >
+            <p class="text-sm text-[var(--text-3)]">{{ item.label }}</p>
+            <p class="admin-overview-value">{{ item.value }}</p>
+            <p class="mt-3 text-xs leading-6" :class="item.tone === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'">
+              {{ item.hint }}
             </p>
-            <div class="mt-6 flex flex-wrap gap-3">
-              <RouterLink to="/admin/comments" class="ui-btn ui-btn-ghost text-sm">
-                打开审核池
-              </RouterLink>
-              <RouterLink to="/admin/posts" class="ui-btn ui-btn-secondary text-sm">
-                打开文章管理
-              </RouterLink>
-            </div>
-          </div>
+          </article>
         </div>
 
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-          <SectionCard title="最近文章" description="最近更新的内容应像工作列表，而不是普通信息展示。" variant="panel">
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+          <SectionCard title="最近文章" description="最近更新内容收成一个可快速浏览的工作列表。" variant="panel">
             <div v-if="recentPosts.length === 0" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-12 text-center text-sm text-[var(--text-3)]">
               暂无最近文章数据。
             </div>
@@ -266,7 +243,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
               <article
                 v-for="post in recentPosts"
                 :key="post.id"
-                class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5"
+                class="admin-list-item"
               >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0 flex-1">
@@ -280,13 +257,13 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                       分类：{{ post.category?.name || '未分类' }} · 作者：{{ post.author.displayName }}
                     </p>
                   </div>
-                </div>
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-3)]">
-                  <span class="editor-mono">更新时间：{{ formatDateTime(post.updatedAt) }}</span>
-                  <span>评论数：{{ post.commentCount }}</span>
+                  <div class="text-right text-xs text-[var(--text-4)]">
+                    <p class="editor-mono">{{ formatDateTime(post.updatedAt) }}</p>
+                    <p class="mt-2">评论数 {{ post.commentCount }}</p>
+                  </div>
                 </div>
                 <div class="mt-4 flex flex-wrap gap-2">
-                  <RouterLink :to="`/admin/posts/${post.id}/edit`" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs">
+                  <RouterLink :to="`/admin/posts/${post.id}/edit`" class="ui-btn ui-btn-primary min-h-[36px] px-4 text-xs">
                     编辑文章
                   </RouterLink>
                   <RouterLink :to="`/posts/${post.slug}`" target="_blank" class="ui-btn ui-btn-secondary min-h-[36px] px-4 text-xs">
@@ -297,32 +274,54 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             </div>
           </SectionCard>
 
-          <SectionCard title="最近评论" description="把高频审核对象压缩到一个可快速扫描的列表中。" variant="panel">
-            <div v-if="recentComments.length === 0" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-12 text-center text-sm text-[var(--text-3)]">
-              暂无最近评论数据。
-            </div>
-            <div v-else class="space-y-3">
-              <article
-                v-for="comment in recentComments"
-                :key="comment.id"
-                class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm text-[var(--text-1)] font-semibold">{{ comment.authorName }}</p>
-                    <p class="mt-2 line-clamp-2 text-xs text-[var(--text-3)] leading-6">{{ comment.content }}</p>
+          <div class="admin-side-stack">
+            <section class="admin-side-card border-[var(--line-accent-soft)] bg-[var(--bg-gradient-card-focus)]">
+              <p class="editor-kicker">待处理事项</p>
+              <h3 class="mt-3 text-[24px] text-[var(--text-1)] font-semibold leading-tight">
+                {{ pendingCommentCount > 0 ? '评论审核需要优先处理' : '当前待处理事项较少' }}
+              </h3>
+              <p class="mt-4 text-sm text-[var(--text-3)] leading-7">
+                {{ pendingCommentCount > 0
+                  ? `目前有 ${pendingCommentCount} 条评论待审核，建议先完成审核，再处理内容更新。`
+                  : '评论池暂时平稳，可以继续发布内容或检查设置项。' }}
+              </p>
+              <div class="mt-5 flex flex-wrap gap-3">
+                <RouterLink to="/admin/comments" class="ui-btn ui-btn-ghost text-sm">
+                  打开审核池
+                </RouterLink>
+                <RouterLink to="/admin/posts" class="ui-btn ui-btn-secondary text-sm">
+                  打开文章管理
+                </RouterLink>
+              </div>
+            </section>
+
+            <SectionCard title="最近评论" description="把高频审核对象压缩到一个可快速扫描的列表中。" variant="panel">
+              <div v-if="recentComments.length === 0" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-12 text-center text-sm text-[var(--text-3)]">
+                暂无最近评论数据。
+              </div>
+              <div v-else class="space-y-3">
+                <article
+                  v-for="comment in recentComments"
+                  :key="comment.id"
+                  class="admin-list-item"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm text-[var(--text-1)] font-semibold">{{ comment.authorName }}</p>
+                      <p class="mt-2 line-clamp-2 text-xs text-[var(--text-3)] leading-6">{{ comment.content }}</p>
+                    </div>
+                    <span :class="getCommentStatusClass(comment.status)">
+                      {{ getCommentStatusLabel(comment.status) }}
+                    </span>
                   </div>
-                  <span :class="getCommentStatusClass(comment.status)">
-                    {{ getCommentStatusLabel(comment.status) }}
-                  </span>
-                </div>
-                <div class="mt-4 text-xs text-[var(--text-4)] leading-6">
-                  <p>所属文章：{{ comment.post.title }}</p>
-                  <p class="editor-mono">提交时间：{{ formatDateTime(comment.createdAt) }}</p>
-                </div>
-              </article>
-            </div>
-          </SectionCard>
+                  <div class="mt-4 text-xs text-[var(--text-4)] leading-6">
+                    <p>所属文章：{{ comment.post.title }}</p>
+                    <p class="editor-mono">提交时间：{{ formatDateTime(comment.createdAt) }}</p>
+                  </div>
+                </article>
+              </div>
+            </SectionCard>
+          </div>
         </div>
       </div>
     </SectionCard>

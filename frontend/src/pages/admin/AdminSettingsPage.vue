@@ -1,9 +1,8 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import { getAdminSettings, updateAdminSettings } from '../../api/settings'
 import SectionCard from '../../components/common/SectionCard.vue'
-import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { AdminSettingsResponse, SettingGroup, SettingItem } from '../../types/settings'
 
 interface SettingsFormState {
@@ -338,258 +337,256 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 
 <template>
   <div class="page-grid">
-    <PublicPageHero
-      kicker="Admin / Site Settings"
-      title="站点设置"
-      description="把站点基础信息、SEO、评论策略、内容策略和 about 静态页配置收成一套轻盈、可维护的后台设置页。"
-      :meta="[
-        'GET /api/admin/settings',
-        'PATCH /api/admin/settings',
-        'static.about.* 已接通前台',
-      ]"
-      :actions="[
-        { label: '重置表单', to: '/admin/settings', variant: 'secondary' },
-        { label: '查看关于页', to: '/about', variant: 'ghost' },
-      ]"
-      aside-title="联调状态"
-      :aside-text="publicSurfaceHint"
-      :aside-stats="[
-        { label: '配置分组', value: pageSummary[0].value },
-        { label: '配置项数', value: pageSummary[1].value },
-      ]"
-    />
-
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_380px]">
-      <SectionCard title="配置表单" description="站点基础信息、SEO、评论、内容与 about 静态页统一在同一视觉体系下编辑。" variant="hero" size="lg">
-        <template #action>
-          <div class="flex flex-wrap gap-3">
-            <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleReset">
-              重置表单
-            </button>
-            <button type="button" class="ui-btn ui-btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-60" :disabled="saving" @click="handleSubmit">
-              {{ saving ? '保存中...' : '保存设置' }}
-            </button>
-          </div>
-        </template>
-
-        <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
-          正在加载站点设置...
+    <SectionCard title="站点设置" description="把站点基础信息、SEO、评论策略、内容策略和 about 静态页配置收成一套轻盈、可维护的后台设置页。" variant="hero" size="lg">
+      <template #action>
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleReset">
+            重置表单
+          </button>
+          <button type="button" class="ui-btn ui-btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-60" :disabled="saving" @click="handleSubmit">
+            {{ saving ? '保存中...' : '保存设置' }}
+          </button>
         </div>
+      </template>
 
-        <div v-else class="space-y-6">
-          <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
-            {{ errorMessage }}
-          </div>
-          <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
-            {{ successMessage }}
+      <div class="admin-card-grid cols-3">
+        <article class="admin-overview-card admin-overview-card-primary">
+          <p class="editor-kicker">配置分组</p>
+          <p class="admin-overview-value">{{ pageSummary[0].value }}</p>
+          <p class="mt-3 text-xs text-[var(--text-3)]">已归拢的后台设置模块</p>
+        </article>
+        <article class="admin-overview-card admin-overview-card-success">
+          <p class="editor-kicker">配置项数</p>
+          <p class="admin-overview-value">{{ pageSummary[1].value }}</p>
+          <p class="mt-3 text-xs text-[var(--success)]">已接入接口的设置字段</p>
+        </article>
+        <article class="admin-overview-card">
+          <p class="editor-kicker">联调状态</p>
+          <p class="mt-4 text-sm text-[var(--text-1)] font-semibold leading-7">{{ publicSurfaceHint }}</p>
+        </article>
+      </div>
+
+      <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_390px]">
+        <SectionCard title="配置表单" description="站点基础信息、SEO、评论、内容与 about 静态页统一在同一视觉体系下编辑。" variant="panel">
+          <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+            正在加载站点设置...
           </div>
 
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="space-y-4 rounded-[24px] border border-[var(--line-soft)] bg-white p-5 lg:col-span-2">
-              <div class="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--line-soft)] pb-4">
-                <div>
-                  <p class="editor-kicker">Site Basics</p>
-                  <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">站点基础信息</h3>
+          <div v-else class="space-y-6">
+            <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+              {{ errorMessage }}
+            </div>
+            <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
+              {{ successMessage }}
+            </div>
+
+            <div class="admin-form-grid">
+              <section class="admin-form-section">
+                <div class="admin-form-section-header">
+                  <div>
+                    <p class="editor-kicker">Site Basics</p>
+                    <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">站点基础信息</h3>
+                  </div>
+                  <p class="max-w-md text-sm text-[var(--text-3)] leading-7">优先收口站点标题、简介、页脚和基础地址，让首页、about 页和 SEO 默认值保持一致。</p>
                 </div>
-                <p class="max-w-md text-sm text-[var(--text-3)] leading-7">优先收口站点标题、简介、页脚和基础地址，让首页、about 页和 SEO 默认值保持一致。</p>
-              </div>
-
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">站点标题</span>
-                  <input v-model="form.siteTitle" type="text" maxlength="100" placeholder="请输入站点标题" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">站点副标题</span>
-                  <input v-model="form.siteSubtitle" type="text" maxlength="120" placeholder="请输入站点副标题" class="ui-input">
-                </label>
-              </div>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">站点描述</span>
-                <textarea v-model="form.siteDescription" rows="4" maxlength="300" placeholder="用于首页简介与 SEO 描述" class="ui-textarea"></textarea>
-              </label>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">站点基础地址</span>
-                  <input v-model="form.siteBaseUrl" type="text" placeholder="例如：https://example.com" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">默认作者名</span>
-                  <input v-model="form.contentDefaultAuthorName" type="text" maxlength="100" placeholder="前台未指定作者时使用" class="ui-input">
-                </label>
-              </div>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">Logo 地址</span>
-                  <input v-model="form.siteLogoUrl" type="text" placeholder="输入可访问的图片地址" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">Favicon 地址</span>
-                  <input v-model="form.siteFaviconUrl" type="text" placeholder="输入 favicon 地址" class="ui-input">
-                </label>
-              </div>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">备案号</span>
-                  <input v-model="form.siteIcp" type="text" maxlength="80" placeholder="例如：京 ICP 备 xxxx 号" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">页脚文案</span>
-                  <input v-model="form.siteFooterText" type="text" maxlength="160" placeholder="例如：© 2026 我的博客" class="ui-input">
-                </label>
-              </div>
-            </div>
-
-            <div class="space-y-4 rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
-              <div class="border-b border-[var(--line-soft)] pb-4">
-                <p class="editor-kicker">SEO</p>
-                <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">SEO 配置</h3>
-              </div>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">默认 SEO 标题</span>
-                <input v-model="form.seoDefaultTitle" type="text" maxlength="120" placeholder="用于列表页与兜底标题" class="ui-input">
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">默认 SEO 描述</span>
-                <textarea v-model="form.seoDefaultDescription" rows="4" maxlength="300" placeholder="用于列表页与兜底描述" class="ui-textarea"></textarea>
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">默认 OG 图片地址</span>
-                <input v-model="form.seoDefaultOgImage" type="text" placeholder="用于社交分享封面" class="ui-input">
-              </label>
-              <div class="space-y-3 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-2)]">
-                <label class="flex items-center justify-between gap-3">
-                  <span>启用 sitemap</span>
-                  <input v-model="form.seoEnableSitemap" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-                <label class="flex items-center justify-between gap-3">
-                  <span>启用 robots</span>
-                  <input v-model="form.seoEnableRobots" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-                <label class="flex items-center justify-between gap-3">
-                  <span>启用 RSS</span>
-                  <input v-model="form.seoEnableRss" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-              </div>
-            </div>
-
-            <div class="space-y-4 rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
-              <div class="border-b border-[var(--line-soft)] pb-4">
-                <p class="editor-kicker">Comment & Content</p>
-                <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">评论与内容策略</h3>
-              </div>
-              <div class="space-y-3 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-2)]">
-                <label class="flex items-center justify-between gap-3">
-                  <span>开启评论</span>
-                  <input v-model="form.commentEnabled" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-                <label class="flex items-center justify-between gap-3">
-                  <span>评论需要审核</span>
-                  <input v-model="form.commentRequireModeration" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-                <label class="flex items-center justify-between gap-3">
-                  <span>允许游客评论</span>
-                  <input v-model="form.commentAllowGuestComment" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-                <label class="flex items-center justify-between gap-3">
-                  <span>自动生成摘要</span>
-                  <input v-model="form.contentAutoGenerateSummary" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
-                </label>
-              </div>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">评论最大长度</span>
-                  <input v-model.number="form.commentMaxLength" type="number" min="1" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">每分钟评论限流</span>
-                  <input v-model.number="form.commentRateLimitPerMinute" type="number" min="1" class="ui-input">
-                </label>
-              </div>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">自动摘要长度</span>
-                  <input v-model.number="form.contentSummaryLength" type="number" min="1" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">相关文章数量</span>
-                  <input v-model.number="form.contentRelatedPostsLimit" type="number" min="1" class="ui-input">
-                </label>
-              </div>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">归档页分页大小</span>
-                <input v-model.number="form.contentArchivePageSize" type="number" min="1" class="ui-input">
-              </label>
-            </div>
-
-            <div class="space-y-4 rounded-[24px] border border-[var(--line-soft)] bg-white p-5 lg:col-span-2">
-              <div class="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--line-soft)] pb-4">
-                <div>
-                  <p class="editor-kicker">Static About</p>
-                  <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">关于页配置</h3>
+                <div class="admin-form-section-body grid gap-4 md:grid-cols-2">
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">站点标题</span>
+                    <input v-model="form.siteTitle" type="text" maxlength="100" placeholder="请输入站点标题" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">站点副标题</span>
+                    <input v-model="form.siteSubtitle" type="text" maxlength="120" placeholder="请输入站点副标题" class="ui-input">
+                  </label>
+                  <label class="block md:col-span-2">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">站点描述</span>
+                    <textarea v-model="form.siteDescription" rows="4" maxlength="300" placeholder="用于首页简介与 SEO 描述" class="ui-textarea"></textarea>
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">站点基础地址</span>
+                    <input v-model="form.siteBaseUrl" type="text" placeholder="例如：https://example.com" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">默认作者名</span>
+                    <input v-model="form.contentDefaultAuthorName" type="text" maxlength="100" placeholder="前台未指定作者时使用" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">Logo 地址</span>
+                    <input v-model="form.siteLogoUrl" type="text" placeholder="输入可访问的图片地址" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">Favicon 地址</span>
+                    <input v-model="form.siteFaviconUrl" type="text" placeholder="输入 favicon 地址" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">备案号</span>
+                    <input v-model="form.siteIcp" type="text" maxlength="80" placeholder="例如：京 ICP 备 xxxx 号" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">页脚文案</span>
+                    <input v-model="form.siteFooterText" type="text" maxlength="160" placeholder="例如：© 2026 我的博客" class="ui-input">
+                  </label>
                 </div>
-                <p class="max-w-md text-sm text-[var(--text-3)] leading-7">保存 static.about.* 后，前台 /about 会直接消费这些内容，形成前后台联动闭环。</p>
+              </section>
+
+              <div class="grid gap-6 lg:grid-cols-2">
+                <section class="admin-form-section">
+                  <div class="admin-form-section-header">
+                    <div>
+                      <p class="editor-kicker">SEO</p>
+                      <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">SEO 配置</h3>
+                    </div>
+                  </div>
+                  <div class="admin-form-section-body space-y-4">
+                    <label class="block">
+                      <span class="mb-2 block text-sm text-[var(--text-3)]">默认 SEO 标题</span>
+                      <input v-model="form.seoDefaultTitle" type="text" maxlength="120" placeholder="用于列表页与兜底标题" class="ui-input">
+                    </label>
+                    <label class="block">
+                      <span class="mb-2 block text-sm text-[var(--text-3)]">默认 SEO 描述</span>
+                      <textarea v-model="form.seoDefaultDescription" rows="4" maxlength="300" placeholder="用于列表页与兜底描述" class="ui-textarea"></textarea>
+                    </label>
+                    <label class="block">
+                      <span class="mb-2 block text-sm text-[var(--text-3)]">默认 OG 图片地址</span>
+                      <input v-model="form.seoDefaultOgImage" type="text" placeholder="用于社交分享封面" class="ui-input">
+                    </label>
+                    <div class="space-y-3 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-2)]">
+                      <label class="admin-switch-row">
+                        <span>启用 sitemap</span>
+                        <input v-model="form.seoEnableSitemap" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                      <label class="admin-switch-row">
+                        <span>启用 robots</span>
+                        <input v-model="form.seoEnableRobots" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                      <label class="admin-switch-row">
+                        <span>启用 RSS</span>
+                        <input v-model="form.seoEnableRss" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="admin-form-section">
+                  <div class="admin-form-section-header">
+                    <div>
+                      <p class="editor-kicker">Comment & Content</p>
+                      <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">评论与内容策略</h3>
+                    </div>
+                  </div>
+                  <div class="admin-form-section-body space-y-4">
+                    <div class="space-y-3 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-2)]">
+                      <label class="admin-switch-row">
+                        <span>开启评论</span>
+                        <input v-model="form.commentEnabled" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                      <label class="admin-switch-row">
+                        <span>评论需要审核</span>
+                        <input v-model="form.commentRequireModeration" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                      <label class="admin-switch-row">
+                        <span>允许游客评论</span>
+                        <input v-model="form.commentAllowGuestComment" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                      <label class="admin-switch-row">
+                        <span>自动生成摘要</span>
+                        <input v-model="form.contentAutoGenerateSummary" type="checkbox" class="h-4 w-4 rounded border-[var(--line-strong)] bg-transparent">
+                      </label>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                      <label class="block">
+                        <span class="mb-2 block text-sm text-[var(--text-3)]">评论最大长度</span>
+                        <input v-model.number="form.commentMaxLength" type="number" min="1" class="ui-input">
+                      </label>
+                      <label class="block">
+                        <span class="mb-2 block text-sm text-[var(--text-3)]">每分钟评论限流</span>
+                        <input v-model.number="form.commentRateLimitPerMinute" type="number" min="1" class="ui-input">
+                      </label>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                      <label class="block">
+                        <span class="mb-2 block text-sm text-[var(--text-3)]">自动摘要长度</span>
+                        <input v-model.number="form.contentSummaryLength" type="number" min="1" class="ui-input">
+                      </label>
+                      <label class="block">
+                        <span class="mb-2 block text-sm text-[var(--text-3)]">相关文章数量</span>
+                        <input v-model.number="form.contentRelatedPostsLimit" type="number" min="1" class="ui-input">
+                      </label>
+                    </div>
+                    <label class="block">
+                      <span class="mb-2 block text-sm text-[var(--text-3)]">归档页分页大小</span>
+                      <input v-model.number="form.contentArchivePageSize" type="number" min="1" class="ui-input">
+                    </label>
+                  </div>
+                </section>
               </div>
 
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">关于页标题</span>
-                  <input v-model="form.staticAboutTitle" type="text" maxlength="120" placeholder="例如：关于我们 / 关于我" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">关于页摘要</span>
-                  <input v-model="form.staticAboutSummary" type="text" maxlength="300" placeholder="用于 about 页首屏摘要" class="ui-input">
-                </label>
-              </div>
-              <label class="block">
-                <span class="mb-2 block text-sm text-[var(--text-3)]">关于页正文（Markdown）</span>
-                <textarea v-model="form.staticAboutContent" rows="10" placeholder="支持 Markdown 文本，保存后前台 /about 直接展示。" class="ui-textarea"></textarea>
-              </label>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">关于页 SEO 标题</span>
-                  <input v-model="form.staticAboutSeoTitle" type="text" maxlength="120" placeholder="用于 about 页面 title" class="ui-input">
-                </label>
-                <label class="block">
-                  <span class="mb-2 block text-sm text-[var(--text-3)]">关于页 SEO 描述</span>
-                  <input v-model="form.staticAboutSeoDescription" type="text" maxlength="300" placeholder="用于 about 页面 SEO 描述" class="ui-input">
-                </label>
-              </div>
+              <section class="admin-form-section">
+                <div class="admin-form-section-header">
+                  <div>
+                    <p class="editor-kicker">Static About</p>
+                    <h3 class="mt-3 text-[20px] font-semibold text-[var(--text-1)]">关于页配置</h3>
+                  </div>
+                  <p class="max-w-md text-sm text-[var(--text-3)] leading-7">保存 static.about.* 后，前台 /about 会直接消费这些内容，形成前后台联动闭环。</p>
+                </div>
+                <div class="admin-form-section-body grid gap-4 md:grid-cols-2">
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">关于页标题</span>
+                    <input v-model="form.staticAboutTitle" type="text" maxlength="120" placeholder="例如：关于我们 / 关于我" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">关于页摘要</span>
+                    <input v-model="form.staticAboutSummary" type="text" maxlength="300" placeholder="用于 about 页首屏摘要" class="ui-input">
+                  </label>
+                  <label class="block md:col-span-2">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">关于页正文（Markdown）</span>
+                    <textarea v-model="form.staticAboutContent" rows="10" placeholder="支持 Markdown 文本，保存后前台 /about 直接展示。" class="ui-textarea"></textarea>
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">关于页 SEO 标题</span>
+                    <input v-model="form.staticAboutSeoTitle" type="text" maxlength="120" placeholder="用于 about 页面 title" class="ui-input">
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm text-[var(--text-3)]">关于页 SEO 描述</span>
+                    <input v-model="form.staticAboutSeoDescription" type="text" maxlength="300" placeholder="用于 about 页面 SEO 描述" class="ui-input">
+                  </label>
+                </div>
+              </section>
             </div>
           </div>
-        </div>
-      </SectionCard>
+        </SectionCard>
 
-      <SectionCard title="当前配置概览" description="右侧用于联调确认分组与字段结构，保持信息浏览和编辑分栏。" variant="panel">
-        <div v-if="groupSummary.length === 0" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
-          当前暂无可展示的配置分组。
-        </div>
-        <div v-else class="space-y-4">
-          <article
-            v-for="group in groupSummary"
-            :key="group.group"
-            class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4"
-          >
-            <h3 class="text-sm font-semibold text-[var(--text-1)]">{{ getGroupLabel(group.group) }}</h3>
-            <ul class="mt-3 space-y-2 text-xs leading-6 text-[var(--text-4)]">
-              <li v-for="item in group.items" :key="item.key">
-                <span class="text-[var(--text-2)]">{{ item.key }}</span>
-                ：{{ formatValue(item.value) }}
-              </li>
+        <SectionCard title="当前配置概览" description="右侧用于联调确认分组与字段结构，保持信息浏览和编辑分栏。" variant="panel">
+          <div v-if="groupSummary.length === 0" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
+            当前暂无可展示的配置分组。
+          </div>
+          <div v-else class="space-y-4">
+            <article
+              v-for="group in groupSummary"
+              :key="group.group"
+              class="admin-side-card bg-[var(--bg-card-soft)]"
+            >
+              <h3 class="text-sm font-semibold text-[var(--text-1)]">{{ getGroupLabel(group.group) }}</h3>
+              <ul class="mt-3 space-y-2 text-xs leading-6 text-[var(--text-4)]">
+                <li v-for="item in group.items" :key="item.key">
+                  <span class="text-[var(--text-2)]">{{ item.key }}</span>
+                  ：{{ formatValue(item.value) }}
+                </li>
+              </ul>
+            </article>
+          </div>
+          <div class="mt-5 rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
+            <p class="font-medium text-[var(--text-1)]">联调说明</p>
+            <ul class="mt-3 space-y-2">
+              <li>• 读取接口：GET /api/admin/settings</li>
+              <li>• 保存接口：PATCH /api/admin/settings</li>
+              <li>• 新增闭环：保存 static.about.* 后，可在前台 /about 直接看到。</li>
+              <li>• 若返回 403，说明当前账号不是超级管理员。</li>
+              <li>• 当前页面不写任何敏感凭据，仅维护白名单站点配置。</li>
             </ul>
-          </article>
-        </div>
-        <div class="mt-5 rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
-          <p class="font-medium text-[var(--text-1)]">联调说明</p>
-          <ul class="mt-3 space-y-2">
-            <li>• 读取接口：GET /api/admin/settings</li>
-            <li>• 保存接口：PATCH /api/admin/settings</li>
-            <li>• 新增闭环：保存 static.about.* 后，可在前台 /about 直接看到。</li>
-            <li>• 若返回 403，说明当前账号不是超级管理员。</li>
-            <li>• 当前页面不写任何敏感凭据，仅维护白名单站点配置。</li>
-          </ul>
-        </div>
-      </SectionCard>
-    </div>
+          </div>
+        </SectionCard>
+      </div>
+    </SectionCard>
   </div>
 </template>
