@@ -25,10 +25,10 @@ export function getPublicPosts(params: PublicPostListQuery = {}) {
 }
 
 export function getPublicPostDetail(slug: string) {
-  return request<PublicPostDetailResponse>({
+  return request<{ post: PublicPostDetailResponse }>({
     url: `/api/public/posts/${slug}`,
     method: 'get',
-  })
+  }).then((response) => response.post)
 }
 
 export function getPublicCategories() {

@@ -95,7 +95,7 @@ async function loadComments() {
 
   try {
     const response = await getPublicComments(slug.value)
-    comments.value = response.list
+    comments.value = Array.isArray(response.list) ? response.list : []
   }
   catch (error) {
     comments.value = []
