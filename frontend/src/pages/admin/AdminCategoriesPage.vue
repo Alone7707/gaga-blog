@@ -7,6 +7,7 @@ import {
   updateAdminCategory,
 } from '../../api/taxonomy'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { AdminCategoryItem, AdminCategoryMutationPayload } from '../../types/taxonomy'
 
 interface CategoryFormState {
@@ -34,6 +35,15 @@ const form = reactive<CategoryFormState>({
 const isEditMode = computed(() => Boolean(editingCategoryId.value))
 const submitLabel = computed(() => (saving.value ? '正在保存...' : (isEditMode.value ? '保存分类' : '创建分类')))
 const totalLabel = computed(() => `共 ${categories.value.length} 个分类`)
+const usedCount = computed(() => categories.value.filter(item => item.postCount > 0).length)
+const emptyCount = computed(() => categories.value.filter(item => item.postCount === 0).length)
+const topCategory = computed(() => {
+  if (categories.value.length === 0) {
+    return null
+  }
+
+  return [...categories.value].sort((left, right) => right.postCount - left.postCount)[0]
+})
 
 onMounted(() => {
   void loadCategories()
@@ -65,11 +75,13 @@ async function loadCategories() {
 }
 
 function handleSearch() {
+  successMessage.value = ''
   void loadCategories()
 }
 
 function handleResetSearch() {
   queryKeyword.value = ''
+  successMessage.value = ''
   void loadCategories()
 }
 
@@ -163,6 +175,22 @@ async function handleSubmit() {
   }
 }
 
+function formatDateTime(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 function resolveErrorMessage(error: unknown, fallback: string) {
   if (typeof error === 'object' && error && 'message' in error) {
     const message = Reflect.get(error, 'message')
@@ -177,104 +205,158 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 </script>
 
 <template>
-  <div class="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_380px]">
-    <SectionCard title="分类管理" description="已接入后台分类列表、创建、更新接口。当前版本优先保证管理员可快速维护分类信息。">
-      <div class="flex flex-col gap-4 rounded-6 border border-white/8 bg-slate-950/35 p-4 lg:flex-row lg:items-end lg:justify-between">
-        <label class="block flex-1">
-          <span class="mb-2 block text-sm text-slate-300">搜索分类</span>
-          <input
-            v-model="queryKeyword"
-            type="text"
-            placeholder="输入分类名称、slug 或描述关键词"
-            class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70"
-            @keyup.enter="handleSearch"
-          >
-        </label>
+  <div class="page-grid">
+    <PublicPageHero
+      kicker="Admin / Categories"
+      title="分类管理"
+      description="分类页优先解决高频维护动作：快速查找、就地编辑、直接创建，并把列表、表单、空态和联调说明统一进同一套清爽工作流。"
+      :meta="[
+        totalLabel,
+        '按 sortOrder 升序展示',
+        topCategory ? `最高频分类：${topCategory.name}` : '等待首个分类',
+      ]"
+      aside-title="当前概览"
+      :aside-text="topCategory ? `${topCategory.name} 当前关联 ${topCategory.postCount} 篇文章，可作为首页分类入口重点维护。` : '当前还没有分类数据，可以先从右侧表单创建基础分类。'"
+      :aside-stats="[
+        { label: '已使用分类', value: usedCount },
+        { label: '空分类', value: emptyCount },
+      ]"
+    />
 
-        <div class="flex flex-wrap gap-3">
-          <button type="button" class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white" @click="handleResetSearch">
-            重置
-          </button>
-          <button type="button" class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300" @click="handleSearch">
-            查询
-          </button>
-        </div>
-      </div>
+    <SectionCard title="分类工作区" description="左侧负责搜索和列表，右侧固定承接创建与编辑，减少来回跳转。" variant="hero" size="lg">
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_380px]">
+        <div class="space-y-5">
+          <div class="rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 md:p-5">
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-2)]">搜索分类</span>
+                <input
+                  v-model="queryKeyword"
+                  type="text"
+                  placeholder="输入分类名称、slug 或描述关键词"
+                  class="ui-input"
+                  @keyup.enter="handleSearch"
+                >
+              </label>
 
-      <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
-        <span>{{ totalLabel }}</span>
-        <span class="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">按 sortOrder 升序展示</span>
-      </div>
+              <div class="flex flex-wrap gap-3 lg:justify-end">
+                <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleResetSearch">
+                  重置
+                </button>
+                <button type="button" class="ui-btn ui-btn-primary text-sm" @click="handleSearch">
+                  查询
+                </button>
+              </div>
+            </div>
 
-      <div class="mt-5 overflow-hidden rounded-6 border border-white/8 bg-slate-950/30">
-        <div v-if="loading" class="px-5 py-14 text-center text-sm text-slate-300">正在加载分类列表...</div>
-        <div v-else-if="errorMessage" class="px-5 py-10">
-          <p class="rounded-4 border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ errorMessage }}</p>
-        </div>
-        <div v-else-if="categories.length === 0" class="px-5 py-14 text-center text-sm text-slate-300">当前暂无分类，可先在右侧创建一个分类。</div>
-        <table v-else class="min-w-full border-collapse text-sm">
-          <thead class="bg-white/5 text-left text-slate-300">
-            <tr>
-              <th class="px-5 py-4 font-medium">分类名称</th>
-              <th class="px-5 py-4 font-medium">Slug</th>
-              <th class="px-5 py-4 font-medium">排序</th>
-              <th class="px-5 py-4 font-medium">文章数</th>
-              <th class="px-5 py-4 font-medium">更新时间</th>
-              <th class="px-5 py-4 font-medium text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="category in categories" :key="category.id" class="border-t border-white/6 transition hover:bg-white/4">
-              <td class="px-5 py-4 align-top">
-                <div class="space-y-2">
-                  <div class="text-sm text-white font-medium">{{ category.name }}</div>
-                  <p class="text-xs text-slate-400 leading-6">{{ category.description || '暂无描述' }}</p>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-4)]">
+              <span>{{ totalLabel }}</span>
+              <span class="ui-badge">按排序值从小到大展示</span>
+            </div>
+          </div>
+
+          <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
+            {{ successMessage }}
+          </div>
+          <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+            {{ errorMessage }}
+          </div>
+
+          <div v-if="loading" class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+            正在加载分类列表...
+          </div>
+          <div v-else-if="categories.length === 0" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
+            当前暂无分类，可先在右侧创建一个分类。
+          </div>
+          <div v-else class="space-y-4">
+            <article
+              v-for="category in categories"
+              :key="category.id"
+              class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5 transition hover:border-[rgba(76,139,245,0.18)] hover:shadow-[var(--shadow-xs)]"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="truncate text-[18px] text-[var(--text-1)] font-semibold leading-7">{{ category.name }}</h3>
+                    <span class="ui-badge">/{{ category.slug }}</span>
+                  </div>
+                  <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
+                    {{ category.description || '暂无描述，建议补一段简短说明，方便后台和前台统一展示。' }}
+                  </p>
                 </div>
-              </td>
-              <td class="px-5 py-4 align-top text-slate-300">{{ category.slug }}</td>
-              <td class="px-5 py-4 align-top text-slate-300">{{ category.sortOrder }}</td>
-              <td class="px-5 py-4 align-top text-slate-300">{{ category.postCount }}</td>
-              <td class="px-5 py-4 align-top text-slate-300">{{ new Date(category.updatedAt).toLocaleString('zh-CN') }}</td>
-              <td class="px-5 py-4 align-top text-right">
-                <button type="button" class="rounded-full border border-white/12 px-3 py-1.5 text-xs text-slate-200 transition hover:border-cyan-300/40 hover:text-white" @click="handleEdit(category)">编辑</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </SectionCard>
+                <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" @click="handleEdit(category)">
+                  编辑
+                </button>
+              </div>
 
-    <SectionCard :title="isEditMode ? '编辑分类' : '新建分类'" description="最小可交付版本先采用同页表单方式，减少跳转并方便联调。">
-      <div class="space-y-4">
-        <div v-if="successMessage" class="rounded-6 border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{{ successMessage }}</div>
-        <label class="block">
-          <span class="mb-2 block text-sm text-slate-300">分类名称</span>
-          <input v-model="form.name" type="text" maxlength="50" placeholder="请输入分类名称" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
-        </label>
-        <label class="block">
-          <span class="mb-2 block text-sm text-slate-300">Slug</span>
-          <input v-model="form.slug" type="text" maxlength="80" placeholder="可选，留空时由后端自动生成" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
-        </label>
-        <label class="block">
-          <span class="mb-2 block text-sm text-slate-300">分类描述</span>
-          <textarea v-model="form.description" rows="5" maxlength="300" placeholder="请输入分类描述，便于后台和前台展示" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70" />
-        </label>
-        <label class="block">
-          <span class="mb-2 block text-sm text-slate-300">排序值</span>
-          <input v-model.number="form.sortOrder" type="number" placeholder="数值越小越靠前" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
-        </label>
-        <div class="flex flex-wrap gap-3 pt-2">
-          <button type="button" class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white" @click="handleResetForm">{{ isEditMode ? '取消编辑' : '清空表单' }}</button>
-          <button type="button" class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" :disabled="saving" @click="handleSubmit">{{ submitLabel }}</button>
+              <div class="mt-4 grid gap-3 text-sm text-[var(--text-3)] md:grid-cols-3">
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3">
+                  <p class="text-xs text-[var(--text-4)]">排序值</p>
+                  <p class="mt-2 text-[var(--text-1)] font-medium">{{ category.sortOrder }}</p>
+                </div>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3">
+                  <p class="text-xs text-[var(--text-4)]">关联文章</p>
+                  <p class="mt-2 text-[var(--text-1)] font-medium">{{ category.postCount }} 篇</p>
+                </div>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3">
+                  <p class="text-xs text-[var(--text-4)]">更新时间</p>
+                  <p class="mt-2 text-[var(--text-1)] font-medium editor-mono">{{ formatDateTime(category.updatedAt) }}</p>
+                </div>
+              </div>
+            </article>
+          </div>
         </div>
-        <div class="rounded-6 border border-dashed border-cyan-300/20 bg-cyan-400/5 p-4 text-sm text-slate-300 leading-7">
-          <p class="text-white font-medium">联调说明</p>
-          <ul class="mt-3 space-y-2">
-            <li>• 列表接口：GET /api/admin/categories</li>
-            <li>• 创建接口：POST /api/admin/categories</li>
-            <li>• 更新接口：PATCH /api/admin/categories/:id</li>
-            <li>• 当前未接删除接口，页面保持最小可交付范围。</li>
-          </ul>
+
+        <div class="space-y-5">
+          <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
+            <div class="border-b border-[var(--line-soft)] pb-4">
+              <p class="editor-kicker">Category Form</p>
+              <h3 class="mt-3 text-[22px] font-semibold text-[var(--text-1)]">
+                {{ isEditMode ? '编辑分类' : '新建分类' }}
+              </h3>
+              <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
+                当前保持单页表单，便于边看列表边修正分类信息。
+              </p>
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-2)]">分类名称</span>
+                <input v-model="form.name" type="text" maxlength="50" placeholder="请输入分类名称" class="ui-input">
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-2)]">Slug</span>
+                <input v-model="form.slug" type="text" maxlength="80" placeholder="可选，留空时由后端自动生成" class="ui-input">
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-2)]">分类描述</span>
+                <textarea v-model="form.description" rows="5" maxlength="300" placeholder="请输入分类描述，便于后台和前台展示" class="ui-textarea" />
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-2)]">排序值</span>
+                <input v-model.number="form.sortOrder" type="number" placeholder="数值越小越靠前" class="ui-input">
+              </label>
+            </div>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+              <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleResetForm">
+                {{ isEditMode ? '取消编辑' : '清空表单' }}
+              </button>
+              <button type="button" class="ui-btn ui-btn-primary text-sm" :disabled="saving" @click="handleSubmit">
+                {{ submitLabel }}
+              </button>
+            </div>
+          </section>
+
+          <section class="rounded-[24px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
+            <p class="font-medium text-[var(--text-1)]">联调说明</p>
+            <ul class="mt-3 space-y-2">
+              <li>• 列表接口：GET /api/admin/categories</li>
+              <li>• 创建接口：POST /api/admin/categories</li>
+              <li>• 更新接口：PATCH /api/admin/categories/:id</li>
+              <li>• 当前未接删除接口，页面保持最小可交付范围。</li>
+            </ul>
+          </section>
         </div>
       </div>
     </SectionCard>

@@ -2,7 +2,14 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { createAdminPost, getAdminPostDetail, updateAdminPost } from '../../api/posts'
+import {
+  archiveAdminPost,
+  createAdminPost,
+  getAdminPostDetail,
+  publishAdminPost,
+  unpublishAdminPost,
+  updateAdminPost,
+} from '../../api/posts'
 import { getAdminCategories, getAdminTags } from '../../api/taxonomy'
 import SectionCard from '../../components/common/SectionCard.vue'
 import type { AdminCategoryItem, AdminTagItem } from '../../types/taxonomy'
@@ -24,17 +31,20 @@ interface EditorFormState {
   tagIds: string[]
 }
 
+type PostActionType = 'publish' | 'unpublish' | 'archive'
+
 const route = useRoute()
 const router = useRouter()
 
 const statusOptions: StatusOption[] = [
   { label: '草稿', value: 'DRAFT', hint: '适合未完成内容，默认不会对外展示。' },
-  { label: '已发布', value: 'PUBLISHED', hint: '保存时按已发布状态提交，便于直接联调线上展示链路。' },
-  { label: '已归档', value: 'ARCHIVED', hint: '保留内容但不作为正常发布内容使用。' },
+  { label: '已发布', value: 'PUBLISHED', hint: '发布后会进入公开站点可见链路。' },
+  { label: '已归档', value: 'ARCHIVED', hint: '归档后保留内容，但不再作为正常发布内容。' },
 ]
 
 const loading = ref(false)
 const saving = ref(false)
+const actionLoading = ref<PostActionType | ''>('')
 const taxonomyLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
@@ -58,7 +68,7 @@ const isEditMode = computed(() => typeof route.params.id === 'string' && route.p
 const pageTitle = computed(() => (isEditMode.value ? '编辑文章' : '新建文章'))
 const pageDescription = computed(() => (
   isEditMode.value
-    ? '已接入管理员文章详情与更新接口，并补齐真实分类、标签选择。'
+    ? '已接入管理员文章详情、更新与独立发布动作接口，并补齐真实分类、标签选择。'
     : '已接入管理员文章创建接口，可直接完成最小可用发文链路。'
 ))
 const currentStatusMeta = computed(() => statusOptions.find((item) => item.value === form.status) ?? statusOptions[0])
@@ -68,6 +78,21 @@ const wordCount = computed(() => form.contentMarkdown.trim().length)
 const selectedCategory = computed(() => categories.value.find((item) => item.id === form.categoryId) ?? null)
 const selectedTags = computed(() => tags.value.filter((item) => form.tagIds.includes(item.id)))
 const hasTaxonomyData = computed(() => categories.value.length > 0 || tags.value.length > 0)
+const canRunPostActions = computed(() => isEditMode.value && !!postDetail.value?.id)
+const canPublish = computed(() => canRunPostActions.value && form.status !== 'PUBLISHED')
+const canUnpublish = computed(() => canRunPostActions.value && form.status === 'PUBLISHED')
+const canArchive = computed(() => canRunPostActions.value && form.status !== 'ARCHIVED')
+const actionHint = computed(() => {
+  if (!isEditMode.value) {
+    return '请先创建文章，保存成功后才能使用发布、下线、归档动作。'
+  }
+
+  if (!postDetail.value?.id) {
+    return '文章详情加载完成后可执行发布动作。'
+  }
+
+  return '状态切换已改为独立动作接口，避免保存表单时混入发布语义。'
+})
 
 onMounted(() => {
   void loadTaxonomyOptions()
@@ -107,8 +132,8 @@ async function loadTaxonomyOptions() {
       getAdminTags({ page: 1, pageSize: 100 }),
     ])
 
-    categories.value = categoryResponse.list
-    tags.value = tagResponse.list
+    categories.value = Array.isArray(categoryResponse.list) ? categoryResponse.list : []
+    tags.value = Array.isArray(tagResponse.list) ? tagResponse.list : []
   }
   catch (error) {
     categories.value = []
@@ -122,13 +147,13 @@ async function loadTaxonomyOptions() {
 
 // 将接口返回值回填到表单，保证编辑模式可以直接修改再保存。
 function patchForm(post: AdminPostDetail) {
-  form.title = post.title
-  form.slug = post.slug
+  form.title = post.title ?? ''
+  form.slug = post.slug ?? ''
   form.summary = post.summary ?? ''
-  form.contentMarkdown = post.contentMarkdown
-  form.status = post.status
+  form.contentMarkdown = post.contentMarkdown ?? ''
+  form.status = post.status ?? 'DRAFT'
   form.categoryId = post.category?.id ?? ''
-  form.tagIds = post.tags.map((item) => item.id)
+  form.tagIds = Array.isArray(post.tags) ? post.tags.map((item) => item.id) : []
 }
 
 // 保存前先做最小表单校验，避免明显无效请求打到后端。
@@ -163,7 +188,6 @@ function buildPayload(): AdminPostEditorPayload {
     slug: form.slug,
     summary: form.summary,
     contentMarkdown: form.contentMarkdown,
-    status: form.status,
     visibility: 'PUBLIC',
     categoryId: form.categoryId || undefined,
     tagIds: form.tagIds,
@@ -179,7 +203,7 @@ function handleTagToggle(tagId: string) {
   form.tagIds = [...form.tagIds, tagId]
 }
 
-// 保存逻辑同时覆盖新建与编辑场景，成功后统一跳回文章管理页。
+// 保存逻辑同时覆盖新建与编辑场景，编辑时只保存内容，不再顺手切状态。
 async function handleSubmit() {
   const validationMessage = validateForm()
 
@@ -201,11 +225,16 @@ async function handleSubmit() {
 
     postDetail.value = response.post
     patchForm(response.post)
-    lastSavedAt.value = response.post.updatedAt
-    successMessage.value = isEditMode.value ? '文章保存成功，正在返回文章管理页...' : '文章创建成功，正在返回文章管理页...'
+    lastSavedAt.value = response.post.updatedAt ?? null
 
+    if (isEditMode.value) {
+      successMessage.value = '文章内容保存成功'
+      return
+    }
+
+    successMessage.value = '文章创建成功，正在跳转到编辑页...'
     window.setTimeout(() => {
-      void router.push('/admin/posts')
+      void router.push(`/admin/posts/${response.post.id}/edit`)
     }, 600)
   }
   catch (error) {
@@ -214,6 +243,75 @@ async function handleSubmit() {
   finally {
     saving.value = false
   }
+}
+
+async function handlePostAction(action: PostActionType) {
+  if (!postDetail.value?.id || !isEditMode.value) {
+    errorMessage.value = '请先创建并加载文章详情后再执行状态动作'
+    successMessage.value = ''
+    return
+  }
+
+  if (action === 'publish') {
+    const validationMessage = validateForm()
+
+    if (validationMessage) {
+      errorMessage.value = `发布前请先修正内容：${validationMessage}`
+      successMessage.value = ''
+      return
+    }
+  }
+
+  actionLoading.value = action
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    if (action === 'publish') {
+      await updateAdminPost(postDetail.value.id, buildPayload())
+    }
+
+    const response = action === 'publish'
+      ? await publishAdminPost(postDetail.value.id)
+      : action === 'unpublish'
+        ? await unpublishAdminPost(postDetail.value.id)
+        : await archiveAdminPost(postDetail.value.id)
+
+    postDetail.value = response.post
+    patchForm(response.post)
+    lastSavedAt.value = response.post.updatedAt ?? null
+    successMessage.value = getActionSuccessMessage(action, response.post.status)
+  }
+  catch (error) {
+    errorMessage.value = resolveErrorMessage(error, getActionFallbackMessage(action))
+  }
+  finally {
+    actionLoading.value = ''
+  }
+}
+
+function getActionSuccessMessage(action: PostActionType, status: PostStatus) {
+  if (action === 'publish') {
+    return status === 'PUBLISHED' ? '文章已发布' : '发布动作已完成'
+  }
+
+  if (action === 'unpublish') {
+    return status === 'DRAFT' ? '文章已下线并恢复为草稿' : '下线动作已完成'
+  }
+
+  return status === 'ARCHIVED' ? '文章已归档' : '归档动作已完成'
+}
+
+function getActionFallbackMessage(action: PostActionType) {
+  if (action === 'publish') {
+    return '文章发布失败，请稍后重试'
+  }
+
+  if (action === 'unpublish') {
+    return '文章下线失败，请稍后重试'
+  }
+
+  return '文章归档失败，请稍后重试'
 }
 
 // 返回列表时不做销毁操作，保持当前页面逻辑简单可控。
@@ -260,7 +358,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
       <template #action>
         <div class="flex flex-wrap items-center justify-end gap-3">
           <button type="button" class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white" @click="handleBack">返回列表</button>
-          <button type="button" class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" :disabled="saving || loading" @click="handleSubmit">{{ saving ? '正在保存...' : (isEditMode ? '保存修改' : '创建文章') }}</button>
+          <button type="button" class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" :disabled="saving || loading || actionLoading !== ''" @click="handleSubmit">{{ saving ? '正在保存...' : (isEditMode ? '保存内容' : '创建文章') }}</button>
         </div>
       </template>
 
@@ -339,15 +437,25 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             <section class="rounded-6 border border-white/8 bg-slate-950/35 p-5">
               <h3 class="text-lg text-white font-semibold">发布信息</h3>
               <div class="mt-5 space-y-4 text-sm text-slate-300">
-                <label class="block">
-                  <span class="mb-2 block text-sm text-slate-300">状态</span>
-                  <select v-model="form.status" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
-                    <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                  </select>
-                </label>
                 <div class="rounded-5 border border-cyan-300/15 bg-cyan-400/6 p-4">
-                  <p class="text-xs text-cyan-200">当前状态说明</p>
-                  <p class="mt-3 text-sm text-slate-100 leading-6">{{ currentStatusMeta.hint }}</p>
+                  <p class="text-xs text-cyan-200">当前状态</p>
+                  <p class="mt-3 text-base text-slate-100 font-semibold">{{ currentStatusMeta.label }}</p>
+                  <p class="mt-2 text-sm text-slate-100 leading-6">{{ currentStatusMeta.hint }}</p>
+                </div>
+                <div class="rounded-5 border border-white/8 bg-white/4 p-4">
+                  <p class="text-xs text-slate-400">动作说明</p>
+                  <p class="mt-3 text-sm text-slate-300 leading-7">{{ actionHint }}</p>
+                </div>
+                <div class="grid gap-3">
+                  <button type="button" class="rounded-full bg-emerald-400 px-4 py-2.5 text-sm text-slate-950 font-semibold transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canPublish || saving || loading || actionLoading !== ''" @click="handlePostAction('publish')">
+                    {{ actionLoading === 'publish' ? '正在发布...' : '发布文章' }}
+                  </button>
+                  <button type="button" class="rounded-full border border-white/12 px-4 py-2.5 text-sm text-slate-100 transition hover:border-cyan-300/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canUnpublish || saving || loading || actionLoading !== ''" @click="handlePostAction('unpublish')">
+                    {{ actionLoading === 'unpublish' ? '正在下线...' : '下线为草稿' }}
+                  </button>
+                  <button type="button" class="rounded-full border border-amber-300/30 px-4 py-2.5 text-sm text-amber-100 transition hover:border-amber-200/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canArchive || saving || loading || actionLoading !== ''" @click="handlePostAction('archive')">
+                    {{ actionLoading === 'archive' ? '正在归档...' : '归档文章' }}
+                  </button>
                 </div>
                 <div class="rounded-5 border border-white/8 bg-white/4 p-4">
                   <p class="text-xs text-slate-400">文章路径</p>
@@ -373,6 +481,10 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                     <p class="text-xs text-slate-400">最近保存</p>
                     <p class="mt-3 text-sm text-white">{{ formatDateTime(lastSavedAt || postDetail?.updatedAt || null) }}</p>
                   </div>
+                  <div class="rounded-5 border border-white/8 bg-white/4 p-4">
+                    <p class="text-xs text-slate-400">发布时间</p>
+                    <p class="mt-3 text-sm text-white">{{ formatDateTime(postDetail?.publishedAt || null) }}</p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -381,8 +493,9 @@ function resolveErrorMessage(error: unknown, fallback: string) {
               <h3 class="text-base text-white font-semibold">联调说明</h3>
               <ul class="mt-4 space-y-2">
                 <li>• 新建走 POST /api/admin/posts，编辑走 PATCH /api/admin/posts/:id。</li>
+                <li>• 发布 / 下线 / 归档已切到 PATCH /api/admin/posts/:id/publish|unpublish|archive。</li>
+                <li>• 发布前会先保存当前表单内容，再进入后端发布校验与发布时间处理链路。</li>
                 <li>• 分类选项来自 GET /api/admin/categories，标签选项来自 GET /api/admin/tags。</li>
-                <li>• 当前默认以 PUBLIC 可见性提交，后续可在此处扩展可见性与发布时间配置。</li>
                 <li>• 若后端返回字段校验错误，页面会直接展示接口 message，便于快速定位联调问题。</li>
               </ul>
             </section>
