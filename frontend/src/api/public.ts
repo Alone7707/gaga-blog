@@ -21,7 +21,7 @@ export function getPublicPosts(params: PublicPostListQuery = {}) {
     url: '/api/public/posts',
     method: 'get',
     params: buildPublicListParams(params),
-  })
+  }).then(normalizePublicPostListResponse)
 }
 
 export function getPublicPostDetail(slug: string) {
@@ -43,7 +43,7 @@ export function getPublicCategoryPosts(slug: string, params: PublicPostListQuery
     url: `/api/public/categories/${slug}/posts`,
     method: 'get',
     params: buildPublicListParams(params),
-  })
+  }).then(normalizePublicCategoryPostsResponse)
 }
 
 export function getPublicTags() {
@@ -58,7 +58,7 @@ export function getPublicTagPosts(slug: string, params: PublicPostListQuery = {}
     url: `/api/public/tags/${slug}/posts`,
     method: 'get',
     params: buildPublicListParams(params),
-  })
+  }).then(normalizePublicTagPostsResponse)
 }
 
 export function searchPublicPosts(params: PublicSearchQuery) {
@@ -66,21 +66,21 @@ export function searchPublicPosts(params: PublicSearchQuery) {
     url: '/api/public/search',
     method: 'get',
     params: buildPublicSearchParams(params),
-  })
+  }).then(normalizePublicSearchResponse)
 }
 
 export function getPublicArchives() {
   return request<PublicArchiveResponse>({
     url: '/api/public/archives',
     method: 'get',
-  })
+  }).then(normalizePublicArchiveResponse)
 }
 
 export function getPublicComments(slug: string) {
   return request<PublicCommentListResponse>({
     url: `/api/public/posts/${slug}/comments`,
     method: 'get',
-  })
+  }).then(normalizePublicCommentListResponse)
 }
 
 export function createPublicComment(slug: string, payload: PublicCreateCommentPayload) {
@@ -114,5 +114,59 @@ function buildPublicCommentPayload(payload: PublicCreateCommentPayload) {
     ...(payload.authorWebsite?.trim() ? { authorWebsite: payload.authorWebsite.trim() } : {}),
     content: payload.content.trim(),
     ...(payload.parentId?.trim() ? { parentId: payload.parentId.trim() } : {}),
+  }
+}
+
+function normalizePublicPostListResponse(response: PublicPostListResponse): PublicPostListResponse {
+  return {
+    list: Array.isArray(response.list) ? response.list : [],
+    pagination: normalizePublicPagination(response.pagination),
+  }
+}
+
+function normalizePublicCategoryPostsResponse(response: PublicCategoryPostsResponse): PublicCategoryPostsResponse {
+  return {
+    ...response,
+    list: Array.isArray(response.list) ? response.list : [],
+    pagination: normalizePublicPagination(response.pagination),
+  }
+}
+
+function normalizePublicTagPostsResponse(response: PublicTagPostsResponse): PublicTagPostsResponse {
+  return {
+    ...response,
+    list: Array.isArray(response.list) ? response.list : [],
+    pagination: normalizePublicPagination(response.pagination),
+  }
+}
+
+function normalizePublicSearchResponse(response: PublicSearchResponse): PublicSearchResponse {
+  return {
+    ...response,
+    keyword: typeof response.keyword === 'string' ? response.keyword : '',
+    list: Array.isArray(response.list) ? response.list : [],
+    pagination: normalizePublicPagination(response.pagination),
+  }
+}
+
+function normalizePublicArchiveResponse(response: PublicArchiveResponse): PublicArchiveResponse {
+  return {
+    list: Array.isArray(response.list) ? response.list : [],
+    total: typeof response.total === 'number' ? response.total : 0,
+  }
+}
+
+function normalizePublicCommentListResponse(response: PublicCommentListResponse): PublicCommentListResponse {
+  return {
+    list: Array.isArray(response.list) ? response.list : [],
+  }
+}
+
+function normalizePublicPagination(pagination: PublicPostListResponse['pagination']) {
+  return {
+    page: typeof pagination?.page === 'number' ? pagination.page : 1,
+    pageSize: typeof pagination?.pageSize === 'number' ? pagination.pageSize : 10,
+    total: typeof pagination?.total === 'number' ? pagination.total : 0,
+    totalPages: typeof pagination?.totalPages === 'number' ? pagination.totalPages : 0,
   }
 }
