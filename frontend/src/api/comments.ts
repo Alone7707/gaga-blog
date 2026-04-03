@@ -3,6 +3,7 @@ import type {
   AdminCommentDetailResponse,
   AdminCommentListQuery,
   AdminCommentListResponse,
+  AdminCommentReplyPayload,
   AdminCommentReviewPayload,
   AdminCommentReviewResponse,
   AdminCommentStatsEnvelope,
@@ -28,6 +29,14 @@ export function getAdminCommentDetail(id: string) {
   return request<AdminCommentDetailResponse>({
     url: `/api/admin/comments/${id}`,
     method: 'get',
+  })
+}
+
+export function replyAdminComment(id: string, payload: AdminCommentReplyPayload) {
+  return request<AdminCommentReviewResponse>({
+    url: `/api/admin/comments/${id}/reply`,
+    method: 'post',
+    data: buildReplyPayload(payload),
   })
 }
 
@@ -63,6 +72,13 @@ function buildCommentListParams(params: AdminCommentListQuery) {
     ...(params.status ? { status: params.status } : {}),
     ...(params.keyword?.trim() ? { keyword: params.keyword.trim() } : {}),
     ...(params.postId?.trim() ? { postId: params.postId.trim() } : {}),
+  }
+}
+
+function buildReplyPayload(payload: AdminCommentReplyPayload) {
+  return {
+    content: payload.content.trim(),
+    ...buildReviewPayload(payload),
   }
 }
 

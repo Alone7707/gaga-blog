@@ -1,11 +1,14 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CommentStatus, Prisma } from '@prisma/client';
 
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ListCommentQueryDto } from './dto/list-comment-query.dto';
+import { ReplyCommentDto } from './dto/reply-comment.dto';
 import { ReviewCommentDto } from './dto/review-comment.dto';
 
 type ReviewableCommentStatus = 'APPROVED' | 'REJECTED' | 'SPAM';
@@ -162,6 +165,61 @@ export class CommentService {
     return this.toAdminCommentDetail(comment);
   }
 
+  // 管理员回复沿用现有评论模型，创建单层回复并直接标记为已通过。
+  async replyComment(id: string, currentUser: AuthenticatedUser, dto: ReplyCommentDto) {
+    const existing = await this.prismaService.comment.findUnique({
+      where: { id },
+      include: COMMENT_DETAIL_INCLUDE,
+    });
+
+    if (!existing) {
+      throw new NotFoundException({
+        code: 'COMMENT_NOT_FOUND',
+        message: '评论不存在',
+      });
+    }
+
+    if (existing.parentId) {
+      throw new BadRequestException({
+        code: 'COMMENT_REPLY_TARGET_INVALID',
+        message: '当前仅支持回复顶层评论',
+      });
+    }
+
+    const normalizedContent = this.normalizeReplyContent(dto.content);
+    const normalizedReason = this.normalizeOptionalText(dto.reason);
+    const adminWebsite = this.buildAdminWebsite(currentUser.username);
+
+    await this.prismaService.comment.create({
+      data: {
+        postId: existing.postId,
+        parentId: existing.id,
+        authorName: currentUser.displayName,
+        authorEmail: null,
+        authorWebsite: adminWebsite,
+        content: normalizedContent,
+        status: CommentStatus.APPROVED,
+        reviewReason: normalizedReason,
+        approvedAt: new Date(),
+        reviewedById: currentUser.userId,
+      },
+    });
+
+    const updated = await this.prismaService.comment.findUnique({
+      where: { id },
+      include: COMMENT_DETAIL_INCLUDE,
+    });
+
+    if (!updated) {
+      throw new NotFoundException({
+        code: 'COMMENT_NOT_FOUND',
+        message: '评论不存在',
+      });
+    }
+
+    return this.toAdminCommentDetail(updated);
+  }
+
   // 审核动作统一收口，避免通过、驳回、垃圾评论三套重复逻辑。
   async reviewComment(
     id: string,
@@ -193,6 +251,29 @@ export class CommentService {
     });
 
     return this.toAdminCommentDetail(updated);
+  }
+
+  private normalizeReplyContent(content: string) {
+    const normalized = content.replace(/<[^>]*>/g, '').trim();
+
+    if (normalized.length < 2 || normalized.length > 1000) {
+      throw new BadRequestException({
+        code: 'COMMENT_CONTENT_INVALID',
+        message: '回复内容长度需在 2 到 1000 个字符之间',
+      });
+    }
+
+    return normalized;
+  }
+
+  private buildAdminWebsite(username: string) {
+    const normalizedUsername = username.trim();
+
+    if (!normalizedUsername) {
+      return null;
+    }
+
+    return `/admin/users/${normalizedUsername}`;
   }
 
   private normalizeOptionalText(value?: string | null) {

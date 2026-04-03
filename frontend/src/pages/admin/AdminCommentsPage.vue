@@ -1,5 +1,6 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 
 import {
@@ -9,6 +10,7 @@ import {
   getAdminCommentStats,
   markAdminCommentSpam,
   rejectAdminComment,
+  replyAdminComment,
 } from '../../api/comments'
 import SectionCard from '../../components/common/SectionCard.vue'
 import PublicPageHero from '../../components/public/PublicPageHero.vue'
@@ -19,6 +21,7 @@ import type {
   AdminCommentStatus,
   AdminCommentStatsResponse,
 } from '../../types/comment'
+import { useAuthStore } from '../../stores/auth'
 
 interface StatusOption {
   label: string
@@ -45,10 +48,19 @@ const queryForm = reactive({
   status: 'PENDING' as '' | AdminCommentStatus,
 })
 
+const replyForm = reactive({
+  content: '',
+  reason: '',
+})
+
+const authStore = useAuthStore()
+const { profile } = storeToRefs(authStore)
+
 const listLoading = ref(false)
 const statsLoading = ref(false)
 const detailLoading = ref(false)
 const actionLoadingId = ref('')
+const replySubmitting = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const comments = ref<AdminCommentItem[]>([])
@@ -103,6 +115,14 @@ const pendingFirstHint = computed(() => {
   }
 
   return `当前待审核 ${stats.value.pending} 条，建议先处理最新提交评论。`
+})
+
+const canReplySelectedComment = computed(() => {
+  if (!selectedCommentDetail.value) {
+    return false
+  }
+
+  return !selectedCommentDetail.value.parentId
 })
 
 onMounted(() => {
@@ -181,6 +201,7 @@ async function loadCommentDetail(commentId: string) {
   if (!commentId) {
     selectedCommentId.value = ''
     selectedCommentDetail.value = null
+    resetReplyForm()
     return
   }
 
@@ -218,6 +239,7 @@ function handleStatusTabClick(status: '' | AdminCommentStatus) {
 
   queryForm.status = status
   successMessage.value = ''
+  resetReplyForm()
   void loadComments(1)
 }
 
@@ -231,12 +253,59 @@ function handlePageChange(nextPage: number) {
 
 async function handleSelectComment(commentId: string) {
   successMessage.value = ''
+  resetReplyForm()
   await loadCommentDetail(commentId)
 }
 
 // 审核动作仍然使用 prompt 收集备注，先保证联调闭环和审核效率。
+function resetReplyForm() {
+  replyForm.content = ''
+  replyForm.reason = ''
+}
+
+async function handleReplySubmit() {
+  const comment = selectedCommentDetail.value
+
+  if (!comment || !comment.id || replySubmitting.value || !canReplySelectedComment.value) {
+    return
+  }
+
+  const replyContent = replyForm.content.trim()
+
+  if (replyContent.length < 2) {
+    errorMessage.value = '回复内容至少 2 个字符'
+    successMessage.value = ''
+    return
+  }
+
+  replySubmitting.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await replyAdminComment(comment.id, {
+      content: replyContent,
+      reason: replyForm.reason,
+    })
+
+    successMessage.value = '管理员回复已发布'
+    resetReplyForm()
+    await Promise.all([
+      loadCommentStats(),
+      loadComments(pagination.page),
+      loadCommentDetail(comment.id),
+    ])
+  }
+  catch (error) {
+    errorMessage.value = resolveErrorMessage(error, '管理员回复失败，请稍后重试')
+  }
+  finally {
+    replySubmitting.value = false
+  }
+}
+
 async function handleReviewAction(comment: AdminCommentItem, action: AdminCommentReviewAction) {
-  if (actionLoadingId.value) {
+  if (actionLoadingId.value || replySubmitting.value) {
     return
   }
 
@@ -646,6 +715,51 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             <p class="text-sm font-medium text-[var(--text-1)]">父评论</p>
             <p class="mt-2 text-xs text-[var(--text-4)]">{{ selectedCommentDetail.parent.authorName }}</p>
             <p class="mt-3 text-sm text-[var(--text-3)] leading-7">{{ selectedCommentDetail.parent.content }}</p>
+          </div>
+
+          <div class="rounded-[22px] border border-[var(--line-soft)] bg-white p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-medium text-[var(--text-1)]">管理员回复</p>
+                <p class="mt-1 text-xs text-[var(--text-4)]">
+                  直接为当前评论补一条单层回复，默认立即公开展示。
+                </p>
+              </div>
+              <span class="ui-badge ui-badge-status-approved">{{ profile?.displayName ?? '管理员' }}</span>
+            </div>
+
+            <div v-if="!canReplySelectedComment" class="mt-4 rounded-[18px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-3 text-sm text-[var(--text-3)]">
+              当前评论本身就是回复，暂不支持继续向下嵌套回复。
+            </div>
+            <form v-else class="mt-4 space-y-4" @submit.prevent="handleReplySubmit">
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-3)]">回复内容</span>
+                <textarea
+                  v-model="replyForm.content"
+                  class="ui-input min-h-[120px] resize-y"
+                  placeholder="输入管理员回复内容，提交后将直接出现在前台已审核回复中。"
+                  maxlength="1000"
+                />
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm text-[var(--text-3)]">回复备注（可选）</span>
+                <input
+                  v-model="replyForm.reason"
+                  type="text"
+                  class="ui-input"
+                  maxlength="200"
+                  placeholder="仅后台可见，可用于记录本次回复说明。"
+                >
+              </label>
+              <div class="flex flex-wrap gap-3">
+                <button type="submit" class="ui-btn ui-btn-primary text-sm" :disabled="replySubmitting || !selectedCommentDetail.id">
+                  {{ replySubmitting ? '回复中...' : '发布管理员回复' }}
+                </button>
+                <button type="button" class="ui-btn ui-btn-secondary text-sm" :disabled="replySubmitting" @click="resetReplyForm">
+                  清空内容
+                </button>
+              </div>
+            </form>
           </div>
 
           <div class="rounded-[22px] border border-[var(--line-soft)] bg-white p-4">

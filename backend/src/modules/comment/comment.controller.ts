@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { CommentService } from './comment.service';
 import { ListCommentQueryDto } from './dto/list-comment-query.dto';
+import { ReplyCommentDto } from './dto/reply-comment.dto';
 import { ReviewCommentDto } from './dto/review-comment.dto';
 
 @ApiTags('Comment')
@@ -33,6 +34,18 @@ export class CommentController {
   async detail(@Param('id') id: string) {
     return {
       comment: await this.commentService.getCommentDetail(id),
+    };
+  }
+
+  @Post(':id/reply')
+  @ApiOperation({ summary: '管理员直接回复评论' })
+  async reply(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Body() dto: ReplyCommentDto,
+  ) {
+    return {
+      comment: await this.commentService.replyComment(id, currentUser, dto),
     };
   }
 

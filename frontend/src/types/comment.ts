@@ -99,6 +99,11 @@ export interface AdminCommentReviewPayload {
   reason?: string
 }
 
+export interface AdminCommentReplyPayload {
+  content: string
+  reason?: string
+}
+
 export interface AdminCommentReviewResponse {
   comment: AdminCommentDetail
 }
