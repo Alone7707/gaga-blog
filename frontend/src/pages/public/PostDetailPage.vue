@@ -60,7 +60,8 @@ const renderedContent = computed(() => {
   return markdown.render(contentMarkdown)
 })
 
-const totalReplies = computed(() => comments.value.reduce((sum, item) => sum + item.replies.length, 0))
+const safeTags = computed(() => Array.isArray(currentPost.value?.tags) ? currentPost.value.tags : [])
+const totalReplies = computed(() => comments.value.reduce((sum, item) => sum + (Array.isArray(item.replies) ? item.replies.length : 0), 0))
 const totalCommentCount = computed(() => comments.value.length + totalReplies.value)
 const authorDisplayName = computed(() => currentPost.value?.author?.displayName || '匿名作者')
 
@@ -235,7 +236,7 @@ watch(
 
           <div class="mt-5 flex flex-wrap gap-2">
             <RouterLink
-              v-for="tag in currentPost.tags"
+              v-for="tag in safeTags"
               :key="tag.id"
               :to="`/tags/${tag.slug}`"
               class="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-200 transition hover:border-cyan-300/30 hover:text-cyan-100"
@@ -262,7 +263,7 @@ watch(
                 <li>发布时间：{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</li>
                 <li>作者：{{ authorDisplayName }}</li>
                 <li>分类：{{ currentPost.category?.name || '未分类' }}</li>
-                <li>标签数：{{ currentPost.tags.length }}</li>
+                <li>标签数：{{ safeTags.length }}</li>
               </ul>
             </section>
 
@@ -367,7 +368,7 @@ watch(
                 </button>
               </div>
 
-              <div v-if="comment.replies.length" class="mt-4 space-y-3 border-t border-white/8 pt-4">
+              <div v-if="Array.isArray(comment.replies) && comment.replies.length" class="mt-4 space-y-3 border-t border-white/8 pt-4">
                 <article
                   v-for="reply in comment.replies"
                   :key="reply.id"
