@@ -187,19 +187,19 @@ watch(
 <template>
   <div class="page-grid">
     <section v-if="loading" class="panel-surface rounded-[28px] p-8">
-      <p class="text-sm text-slate-300 leading-7">
+      <p class="text-sm text-[var(--text-3)] leading-7">
         正在加载文章详情...
       </p>
     </section>
 
-    <section v-else-if="errorMessage" class="panel-surface rounded-[28px] border-rose-400/25 bg-[linear-gradient(180deg,rgba(80,20,30,0.34),rgba(11,21,35,0.92))] p-8">
-      <p class="editor-kicker text-rose-200/80">
+    <section v-else-if="errorMessage" class="panel-surface rounded-[28px] border-[rgba(240,68,56,0.14)] bg-[linear-gradient(180deg,#fff7f6,#ffffff)] p-8">
+      <p class="editor-kicker text-[var(--danger)]">
         文章不存在
       </p>
-      <h2 class="mt-4 text-[34px] font-semibold text-white">
+      <h2 class="mt-4 text-[34px] font-semibold text-[var(--text-1)]">
         未找到对应文章
       </h2>
-      <p class="mt-4 max-w-2xl text-sm leading-7 text-rose-50/90">
+      <p class="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-3)]">
         {{ errorMessage }}
       </p>
       <RouterLink to="/" class="ui-btn ui-btn-ghost mt-6 text-sm">
@@ -209,8 +209,8 @@ watch(
     </section>
 
     <template v-else-if="currentPost">
-      <section class="panel-surface overflow-hidden rounded-[28px]">
-        <div class="border-b border-white/8 bg-[linear-gradient(135deg,rgba(103,232,249,0.12),rgba(139,156,255,0.08),rgba(11,21,35,0.08))] px-6 py-8 md:px-8 md:py-10">
+      <section class="panel-surface overflow-hidden rounded-[32px]">
+        <div class="border-b border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-6 py-8 md:px-8 md:py-10">
           <div class="max-w-5xl">
             <p class="editor-kicker">Article / Technical Longform</p>
             <h2 class="editor-title mt-4 text-[34px] leading-[1.12] md:text-[46px] lg:text-[54px]">
@@ -220,18 +220,18 @@ watch(
               {{ currentPost.summary || '当前文章暂无摘要。' }}
             </p>
 
-            <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+            <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-[var(--text-3)]">
               <RouterLink
                 v-if="currentPost.category"
                 :to="`/categories/${currentPost.category.slug}`"
-                class="ui-badge bg-cyan-300/10 text-cyan-100 border-cyan-300/22"
+                class="ui-badge border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]"
               >
                 {{ currentPost.category.name }}
               </RouterLink>
               <span class="editor-mono">{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</span>
-              <span class="text-white/20">•</span>
+              <span class="text-[var(--text-4)]">•</span>
               <span>作者：{{ authorDisplayName }}</span>
-              <span class="text-white/20">•</span>
+              <span class="text-[var(--text-4)]">•</span>
               <span>{{ readingMinutes }} 分钟阅读</span>
             </div>
 
@@ -249,17 +249,17 @@ watch(
         </div>
 
         <div class="grid gap-6 px-6 py-6 md:px-8 lg:grid-cols-[minmax(0,780px)_minmax(260px,1fr)] lg:items-start lg:justify-between">
-          <article class="article-prose rounded-[24px] border border-white/8 bg-[rgba(3,10,18,0.44)] p-6 md:p-8">
+          <article class="article-prose rounded-[24px] border border-[var(--line-soft)] bg-white p-6 md:p-8">
             <div v-html="renderedContent" />
           </article>
 
           <aside class="space-y-4 lg:sticky lg:top-6">
-            <section class="rounded-[22px] border border-white/8 bg-black/18 p-5">
+            <section class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">阅读信息</p>
-              <h3 class="mt-3 text-[20px] text-white font-semibold">
+              <h3 class="mt-3 text-[20px] text-[var(--text-1)] font-semibold">
                 当前文章档案
               </h3>
-              <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+              <ul class="mt-4 space-y-3 text-sm leading-7 text-[var(--text-3)]">
                 <li>发布时间：{{ formatPublicDate(currentPost.publishedAt ?? currentPost.createdAt) }}</li>
                 <li>作者：{{ authorDisplayName }}</li>
                 <li>分类：{{ currentPost.category?.name || '未分类' }}</li>
@@ -268,9 +268,9 @@ watch(
               </ul>
             </section>
 
-            <section class="rounded-[22px] border border-white/8 bg-black/18 p-5">
+            <section class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">继续浏览</p>
-              <h3 class="mt-3 text-[20px] text-white font-semibold">
+              <h3 class="mt-3 text-[20px] text-[var(--text-1)] font-semibold">
                 站内延展路径
               </h3>
               <div class="mt-4 flex flex-wrap gap-2">
@@ -290,10 +290,10 @@ watch(
               </div>
             </section>
 
-            <section class="rounded-[22px] border border-dashed border-white/10 bg-black/16 p-5">
+            <section class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">讨论状态</p>
-              <p class="mt-3 text-sm leading-7 text-slate-300">
-                评论区已改成讨论模块，当前展示 {{ comments.length }} 条顶层评论和 {{ totalReplies }} 条回复。提交后默认进入审核流程。
+              <p class="mt-3 text-sm leading-7 text-[var(--text-3)]">
+                评论区已收束成讨论模块，当前展示 {{ comments.length }} 条顶层评论和 {{ totalReplies }} 条回复。提交后默认进入审核流程。
               </p>
             </section>
           </aside>
@@ -302,27 +302,27 @@ watch(
 
       <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
         <section class="panel-surface rounded-[28px] p-6 md:p-7">
-          <div class="flex flex-col gap-2 border-b border-white/8 pb-4 md:flex-row md:items-end md:justify-between">
+          <div class="flex flex-col gap-2 border-b border-[var(--line-soft)] pb-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p class="editor-kicker">Discussion</p>
-              <h3 class="mt-3 text-[28px] text-white font-semibold">
+              <h3 class="mt-3 text-[28px] text-[var(--text-1)] font-semibold">
                 公开讨论区
               </h3>
             </div>
-            <p class="text-sm text-slate-300">
+            <p class="text-sm text-[var(--text-3)]">
               当前展示 {{ totalCommentCount }} 条已审核评论与回复
             </p>
           </div>
 
-          <div v-if="commentsLoading" class="mt-5 rounded-[20px] border border-dashed border-white/10 bg-black/16 p-5 text-sm text-slate-300 leading-7">
+          <div v-if="commentsLoading" class="mt-5 rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
             正在加载评论列表...
           </div>
 
-          <div v-else-if="commentsErrorMessage" class="mt-5 rounded-[20px] border border-rose-400/25 bg-rose-400/8 p-5 text-sm text-rose-100 leading-7">
+          <div v-else-if="commentsErrorMessage" class="mt-5 rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
             {{ commentsErrorMessage }}
           </div>
 
-          <div v-else-if="!comments.length" class="mt-5 rounded-[20px] border border-dashed border-white/10 bg-black/16 p-5 text-sm text-slate-300 leading-7">
+          <div v-else-if="!comments.length" class="mt-5 rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
             当前文章还没有公开展示的评论，欢迎成为第一个留言的人。
           </div>
 
@@ -330,7 +330,7 @@ watch(
             <article
               v-for="comment in comments"
               :key="comment.id"
-              class="rounded-[22px] border border-white/8 bg-black/16 p-5"
+              class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5"
             >
               <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -340,18 +340,18 @@ watch(
                       :href="comment.authorWebsite"
                       target="_blank"
                       rel="noreferrer"
-                      class="text-base text-cyan-200 font-semibold transition hover:text-cyan-100"
+                      class="text-base text-[var(--accent-primary)] font-semibold transition hover:text-[var(--accent-primary-hover)]"
                     >
                       {{ comment.authorName }}
                     </a>
-                    <span v-else class="text-base text-white font-semibold">
+                    <span v-else class="text-base text-[var(--text-1)] font-semibold">
                       {{ comment.authorName }}
                     </span>
                     <span class="ui-badge editor-mono">
                       {{ formatPublicDate(comment.createdAt) }}
                     </span>
                   </div>
-                  <p class="mt-3 text-sm text-slate-200 leading-7 whitespace-pre-wrap">
+                  <p class="mt-3 text-sm text-[var(--text-2)] leading-7 whitespace-pre-wrap">
                     {{ comment.content }}
                   </p>
                 </div>
@@ -361,11 +361,11 @@ watch(
                 </button>
               </div>
 
-              <div v-if="Array.isArray(comment.replies) && comment.replies.length" class="mt-4 space-y-3 border-t border-white/8 pt-4">
+              <div v-if="Array.isArray(comment.replies) && comment.replies.length" class="mt-4 space-y-3 border-t border-[var(--line-soft)] pt-4">
                 <article
                   v-for="reply in comment.replies"
                   :key="reply.id"
-                  class="rounded-[18px] border border-white/8 bg-white/4 p-4"
+                  class="rounded-[18px] border border-[var(--line-soft)] bg-white p-4"
                 >
                   <div class="flex flex-wrap items-center gap-2">
                     <a
@@ -373,18 +373,18 @@ watch(
                       :href="reply.authorWebsite"
                       target="_blank"
                       rel="noreferrer"
-                      class="text-sm text-cyan-200 font-semibold transition hover:text-cyan-100"
+                      class="text-sm text-[var(--accent-primary)] font-semibold transition hover:text-[var(--accent-primary-hover)]"
                     >
                       {{ reply.authorName }}
                     </a>
-                    <span v-else class="text-sm text-white font-semibold">
+                    <span v-else class="text-sm text-[var(--text-1)] font-semibold">
                       {{ reply.authorName }}
                     </span>
                     <span class="ui-badge editor-mono">
                       {{ formatPublicDate(reply.createdAt) }}
                     </span>
                   </div>
-                  <p class="mt-3 text-sm text-slate-200 leading-7 whitespace-pre-wrap">
+                  <p class="mt-3 text-sm text-[var(--text-2)] leading-7 whitespace-pre-wrap">
                     {{ reply.content }}
                   </p>
                 </article>
@@ -395,18 +395,18 @@ watch(
 
         <section class="panel-surface rounded-[28px] p-6 md:p-7 xl:sticky xl:top-6">
           <p class="editor-kicker">Comment Form</p>
-          <h3 class="mt-3 text-[28px] text-white font-semibold">
+          <h3 class="mt-3 text-[28px] text-[var(--text-1)] font-semibold">
             发表留言
           </h3>
-          <p class="mt-3 text-sm text-slate-300 leading-7">
+          <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
             提交后评论默认进入审核状态；昵称和内容为必填项，邮箱与个人网站可选。
           </p>
 
-          <div v-if="replyingTo" class="mt-5 rounded-[20px] border border-cyan-300/25 bg-cyan-300/8 p-4 text-sm text-cyan-100 leading-7">
+          <div v-if="replyingTo" class="mt-5 rounded-[20px] border border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] p-4 text-sm text-[var(--accent-primary)] leading-7">
             <p>
               正在回复：<span class="font-semibold">{{ replyingTo.authorName }}</span>
             </p>
-            <p class="mt-2 text-cyan-50/90 line-clamp-3">
+            <p class="mt-2 text-[var(--text-2)] line-clamp-3">
               {{ replyingTo.content }}
             </p>
             <button type="button" class="ui-btn ui-btn-secondary mt-3 min-h-[36px] px-4 text-xs" @click="cancelReply">
@@ -414,17 +414,17 @@ watch(
             </button>
           </div>
 
-          <div v-if="commentSuccessMessage" class="mt-5 rounded-[20px] border border-emerald-400/25 bg-emerald-400/10 p-4 text-sm text-emerald-100 leading-7">
+          <div v-if="commentSuccessMessage" class="mt-5 rounded-[20px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] p-4 text-sm text-[var(--success)] leading-7">
             {{ commentSuccessMessage }}
           </div>
 
-          <div v-if="commentErrorMessage" class="mt-5 rounded-[20px] border border-rose-400/25 bg-rose-400/10 p-4 text-sm text-rose-100 leading-7">
+          <div v-if="commentErrorMessage" class="mt-5 rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)] leading-7">
             {{ commentErrorMessage }}
           </div>
 
           <form class="mt-5 space-y-4" @submit.prevent="submitComment">
             <div>
-              <label class="mb-2 block text-sm text-slate-200" for="comment-author-name">昵称 *</label>
+              <label class="mb-2 block text-sm text-[var(--text-2)]" for="comment-author-name">昵称 *</label>
               <input
                 id="comment-author-name"
                 v-model="commentForm.authorName"
@@ -437,7 +437,7 @@ watch(
             </div>
 
             <div>
-              <label class="mb-2 block text-sm text-slate-200" for="comment-author-email">邮箱</label>
+              <label class="mb-2 block text-sm text-[var(--text-2)]" for="comment-author-email">邮箱</label>
               <input
                 id="comment-author-email"
                 v-model="commentForm.authorEmail"
@@ -448,7 +448,7 @@ watch(
             </div>
 
             <div>
-              <label class="mb-2 block text-sm text-slate-200" for="comment-author-website">个人网站</label>
+              <label class="mb-2 block text-sm text-[var(--text-2)]" for="comment-author-website">个人网站</label>
               <input
                 id="comment-author-website"
                 v-model="commentForm.authorWebsite"
@@ -459,7 +459,7 @@ watch(
             </div>
 
             <div>
-              <label class="mb-2 block text-sm text-slate-200" for="comment-content">评论内容 *</label>
+              <label class="mb-2 block text-sm text-[var(--text-2)]" for="comment-content">评论内容 *</label>
               <textarea
                 id="comment-content"
                 v-model="commentForm.content"

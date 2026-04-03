@@ -137,18 +137,18 @@ function getCommentStatusClass(status: AdminDashboardRecentCommentItem['status']
 
 function getStatCardClass(tone: StatCardItem['tone']) {
   if (tone === 'info') {
-    return 'border-cyan-300/16 bg-[linear-gradient(180deg,rgba(12,27,41,0.96),rgba(7,17,28,0.92))]'
+    return 'border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f8fbff,#ffffff)]'
   }
 
   if (tone === 'success') {
-    return 'border-emerald-400/14 bg-[linear-gradient(180deg,rgba(10,28,28,0.96),rgba(8,17,26,0.92))]'
+    return 'border-[rgba(18,183,106,0.14)] bg-[linear-gradient(180deg,#f4fdf8,#ffffff)]'
   }
 
   if (tone === 'warning') {
-    return 'border-amber-400/14 bg-[linear-gradient(180deg,rgba(33,24,12,0.96),rgba(13,16,24,0.92))]'
+    return 'border-[rgba(247,144,9,0.14)] bg-[linear-gradient(180deg,#fffaf2,#ffffff)]'
   }
 
-  return 'border-white/10 bg-[linear-gradient(180deg,rgba(13,22,35,0.92),rgba(9,16,28,0.88))]'
+  return 'border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#fbfcfe)]'
 }
 
 function formatDateTime(value: string | null) {
@@ -206,12 +206,12 @@ function resolveErrorMessage(error: unknown, fallback: string) {
         </div>
       </template>
 
-      <div v-if="loading" class="rounded-[20px] border border-white/8 bg-black/16 px-5 py-14 text-center text-sm text-slate-300">
+      <div v-if="loading" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
         正在加载仪表盘数据...
       </div>
 
       <div v-else-if="errorMessage" class="space-y-4">
-        <p class="rounded-[18px] border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <p class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
           {{ errorMessage }}
         </p>
         <button type="button" class="ui-btn ui-btn-primary text-sm" @click="loadDashboardOverview">
@@ -225,23 +225,23 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             <article
               v-for="item in statCards"
               :key="item.label"
-              class="rounded-[22px] border p-5 shadow-[var(--shadow-float)]"
+              class="rounded-[22px] border p-5 shadow-[var(--shadow-xs)]"
               :class="getStatCardClass(item.tone)"
             >
-              <p class="text-sm text-slate-400">{{ item.label }}</p>
-              <p class="mt-4 text-[40px] font-semibold text-white">{{ item.value }}</p>
-              <p class="mt-3 text-xs leading-6" :class="item.tone === 'warning' ? 'text-amber-200/90' : 'text-cyan-200/80'">
+              <p class="text-sm text-[var(--text-3)]">{{ item.label }}</p>
+              <p class="mt-4 text-[40px] font-semibold text-[var(--text-1)]">{{ item.value }}</p>
+              <p class="mt-3 text-xs leading-6" :class="item.tone === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--text-3)]'">
                 {{ item.hint }}
               </p>
             </article>
           </div>
 
-          <div class="rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(13,25,39,0.96),rgba(9,16,28,0.92))] p-5">
+          <div class="rounded-[24px] border border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f7fbff,#ffffff)] p-5">
             <p class="editor-kicker">待处理事项</p>
-            <h3 class="mt-3 text-[24px] text-white font-semibold leading-tight">
+            <h3 class="mt-3 text-[24px] text-[var(--text-1)] font-semibold leading-tight">
               {{ pendingCommentCount > 0 ? '评论审核需要优先处理' : '当前待处理事项较少' }}
             </h3>
-            <p class="mt-4 text-sm text-slate-300 leading-7">
+            <p class="mt-4 text-sm text-[var(--text-3)] leading-7">
               {{ pendingCommentCount > 0
                 ? `目前有 ${pendingCommentCount} 条评论待审核，建议先完成审核，再处理内容更新。`
                 : '评论池暂时平稳，可以继续发布内容或检查设置项。' }}
@@ -259,29 +259,29 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <SectionCard title="最近文章" description="最近更新的内容应像工作列表，而不是普通信息展示。" variant="panel">
-            <div v-if="recentPosts.length === 0" class="rounded-[20px] border border-white/8 bg-black/16 px-5 py-12 text-center text-sm text-slate-300">
+            <div v-if="recentPosts.length === 0" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-12 text-center text-sm text-[var(--text-3)]">
               暂无最近文章数据。
             </div>
             <div v-else class="space-y-3">
               <article
                 v-for="post in recentPosts"
                 :key="post.id"
-                class="rounded-[20px] border border-white/8 bg-black/16 p-5"
+                class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5"
               >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-2">
-                      <h3 class="truncate text-base text-white font-semibold">{{ post.title }}</h3>
+                      <h3 class="truncate text-base text-[var(--text-1)] font-semibold">{{ post.title }}</h3>
                       <span :class="getPostStatusClass(post.status)">
                         {{ getPostStatusLabel(post.status) }}
                       </span>
                     </div>
-                    <p class="mt-3 text-xs text-slate-400 leading-6">
+                    <p class="mt-3 text-xs text-[var(--text-4)] leading-6">
                       分类：{{ post.category?.name || '未分类' }} · 作者：{{ post.author.displayName }}
                     </p>
                   </div>
                 </div>
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-4)]">
                   <span class="editor-mono">更新时间：{{ formatDateTime(post.updatedAt) }}</span>
                   <span>评论数：{{ post.commentCount }}</span>
                 </div>
@@ -298,25 +298,25 @@ function resolveErrorMessage(error: unknown, fallback: string) {
           </SectionCard>
 
           <SectionCard title="最近评论" description="把高频审核对象压缩到一个可快速扫描的列表中。" variant="panel">
-            <div v-if="recentComments.length === 0" class="rounded-[20px] border border-white/8 bg-black/16 px-5 py-12 text-center text-sm text-slate-300">
+            <div v-if="recentComments.length === 0" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-12 text-center text-sm text-[var(--text-3)]">
               暂无最近评论数据。
             </div>
             <div v-else class="space-y-3">
               <article
                 v-for="comment in recentComments"
                 :key="comment.id"
-                class="rounded-[20px] border border-white/8 bg-black/16 p-4"
+                class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4"
               >
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0 flex-1">
-                    <p class="text-sm text-white font-semibold">{{ comment.authorName }}</p>
-                    <p class="mt-2 line-clamp-2 text-xs text-slate-400 leading-6">{{ comment.content }}</p>
+                    <p class="text-sm text-[var(--text-1)] font-semibold">{{ comment.authorName }}</p>
+                    <p class="mt-2 line-clamp-2 text-xs text-[var(--text-3)] leading-6">{{ comment.content }}</p>
                   </div>
                   <span :class="getCommentStatusClass(comment.status)">
                     {{ getCommentStatusLabel(comment.status) }}
                   </span>
                 </div>
-                <div class="mt-4 text-xs text-slate-400 leading-6">
+                <div class="mt-4 text-xs text-[var(--text-4)] leading-6">
                   <p>所属文章：{{ comment.post.title }}</p>
                   <p class="editor-mono">提交时间：{{ formatDateTime(comment.createdAt) }}</p>
                 </div>

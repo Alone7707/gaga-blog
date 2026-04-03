@@ -19,7 +19,7 @@ const latestPosts = computed(() => visiblePosts.value.slice(1, 5))
 const highlightedCategories = computed(() => categories.value.slice(0, 4))
 const highlightedTags = computed(() => tags.value.slice(0, 12))
 
-// 首页聚合公开文章、分类和标签入口，首轮只服务于首页主叙事与阅读动线。
+// 首页聚合公开文章、分类和标签入口，首轮只服务首页主叙事与阅读动线。
 async function loadHomeData() {
   loading.value = true
   errorMessage.value = ''
@@ -50,45 +50,45 @@ onMounted(() => {
 
 <template>
   <div class="page-grid">
-    <section class="panel-surface overflow-hidden rounded-[28px] p-6 md:p-8">
-      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_420px] xl:items-stretch">
+    <section class="panel-surface overflow-hidden rounded-[32px] p-6 md:p-8">
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_400px] xl:items-stretch">
         <div class="flex flex-col justify-between gap-8">
           <div>
-            <p class="editor-kicker">首页 / Technical Editorial Intro</p>
+            <p class="editor-kicker">首页 / Fresh Editorial Cover</p>
             <h2 class="editor-title mt-4 max-w-4xl text-[38px] leading-[1.08] md:text-[52px]">
-              把最新内容、主题入口和站点判断收束在同一个首屏。
+              先把值得读的内容推到前面，再把主题路径放在顺手的位置。
             </h2>
             <p class="mt-5 max-w-3xl text-sm text-[var(--text-3)] leading-7 md:text-[16px]">
-              首页不是接口列表，而是整站的编辑部封面：先说明内容方向，再推荐值得先读的文章，最后给出分类、标签和搜索入口。
+              首页回归年轻、简约、清爽的内容产品感：不靠厚重面板压气氛，而是靠信息结构、留白和阅读节奏把内容自然托起来。
             </p>
           </div>
 
           <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-[20px] border border-white/8 bg-black/18 p-5">
+            <div class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">公开文章</p>
-              <p class="mt-4 text-[34px] text-white font-semibold">
+              <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
                 {{ visiblePosts.length }}
               </p>
-              <p class="mt-2 text-sm text-slate-400 leading-6">
-                首页首屏优先展示可读内容，不做无意义占位。
+              <p class="mt-2 text-sm text-[var(--text-3)] leading-6">
+                首屏只放真实内容，不再堆无效装饰块。
               </p>
             </div>
-            <div class="rounded-[20px] border border-white/8 bg-black/18 p-5">
+            <div class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">主题分类</p>
-              <p class="mt-4 text-[34px] text-white font-semibold">
+              <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
                 {{ categories.length }}
               </p>
-              <p class="mt-2 text-sm text-slate-400 leading-6">
-                分类承接归档路径，帮助读者快速进入主题。
+              <p class="mt-2 text-sm text-[var(--text-3)] leading-6">
+                分类承接纵向阅读路径和主题归档。
               </p>
             </div>
-            <div class="rounded-[20px] border border-white/8 bg-black/18 p-5">
+            <div class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">标签话题</p>
-              <p class="mt-4 text-[34px] text-white font-semibold">
+              <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
                 {{ tags.length }}
               </p>
-              <p class="mt-2 text-sm text-slate-400 leading-6">
-                标签负责横向串联，提升继续浏览效率。
+              <p class="mt-2 text-sm text-[var(--text-3)] leading-6">
+                标签负责横向串联内容网络。
               </p>
             </div>
           </div>
@@ -103,21 +103,21 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(15,26,40,0.98),rgba(8,16,28,0.95))] p-6">
+        <div class="rounded-[28px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] p-6">
           <div class="flex items-center justify-between gap-3">
             <p class="editor-kicker">精选主推</p>
             <span class="ui-badge">本周优先阅读</span>
           </div>
 
           <div v-if="heroPost" class="mt-5 space-y-5">
-            <div class="rounded-[20px] border border-white/8 bg-white/4 p-5">
-              <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/78">
+            <div class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-5">
+              <p class="text-xs uppercase tracking-[0.18em] text-[var(--accent-primary)]">
                 {{ heroPost.category }} · {{ heroPost.publishedAt }}
               </p>
-              <h3 class="mt-4 text-[28px] text-white font-semibold leading-[1.25]">
+              <h3 class="mt-4 text-[28px] text-[var(--text-1)] font-semibold leading-[1.25]">
                 {{ heroPost.title }}
               </h3>
-              <p class="mt-4 text-sm text-slate-300 leading-7">
+              <p class="mt-4 text-sm text-[var(--text-3)] leading-7">
                 {{ heroPost.excerpt }}
               </p>
             </div>
@@ -132,7 +132,7 @@ onMounted(() => {
             </RouterLink>
           </div>
 
-          <div v-else class="mt-5 rounded-[20px] border border-dashed border-white/10 bg-black/16 p-5 text-sm text-slate-300 leading-7">
+          <div v-else class="mt-5 rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
             公开文章加载完成后，这里会展示首页主推内容。
           </div>
         </div>
@@ -141,19 +141,19 @@ onMounted(() => {
 
     <SectionCard
       title="最新文章"
-      description="先给出一篇主推，再让次级文章形成稳定的浏览节奏。"
+      description="先给出一篇主推，再让次级文章形成稳定浏览节奏。"
       variant="hero"
       size="lg"
     >
-      <div v-if="loading" class="rounded-[20px] border border-dashed border-white/10 bg-black/16 p-5 text-sm text-slate-300 leading-7">
+      <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
         正在加载公开文章...
       </div>
 
-      <div v-else-if="errorMessage" class="rounded-[20px] border border-rose-400/25 bg-rose-400/8 p-5 text-sm text-rose-100 leading-7">
+      <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
         {{ errorMessage }}
       </div>
 
-      <div v-else-if="!visiblePosts.length" class="rounded-[20px] border border-dashed border-white/10 bg-black/16 p-5 text-sm text-slate-300 leading-7">
+      <div v-else-if="!visiblePosts.length" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
         当前还没有可展示的公开文章，请先发布内容。
       </div>
 
@@ -168,7 +168,7 @@ onMounted(() => {
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <SectionCard
         title="主题归档"
-        description="分类负责纵向结构，先展示最有内容密度的几个主题。"
+        description="分类负责纵向结构，优先展示最有内容密度的几个主题。"
         variant="panel"
       >
         <div class="grid gap-4 md:grid-cols-2">
@@ -176,16 +176,16 @@ onMounted(() => {
             v-for="category in highlightedCategories"
             :key="category.id"
             :to="`/categories/${category.slug}`"
-            class="rounded-[20px] border border-white/8 bg-black/14 p-5 transition hover:border-cyan-300/20 hover:bg-white/4"
+            class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 transition hover:border-[rgba(76,139,245,0.22)] hover:bg-white"
           >
             <p class="editor-kicker">分类导航</p>
-            <h3 class="mt-4 text-[22px] text-white font-semibold leading-tight">
+            <h3 class="mt-4 text-[22px] text-[var(--text-1)] font-semibold leading-tight">
               {{ category.name }}
             </h3>
-            <p class="mt-3 text-sm text-slate-300 leading-7">
+            <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
               {{ category.description || '点击后查看该主题下的全部公开文章。' }}
             </p>
-            <p class="mt-4 text-xs text-slate-400">
+            <p class="mt-4 text-xs text-[var(--text-4)]">
               {{ category.postCount ?? 0 }} 篇公开文章
             </p>
           </RouterLink>
@@ -204,15 +204,15 @@ onMounted(() => {
             :to="`/tags/${tag.slug}`"
             class="inline-flex items-center rounded-full border px-3 py-2 text-xs transition"
             :class="(tag.postCount ?? 0) >= 5
-              ? 'border-cyan-300/28 bg-cyan-300/10 text-cyan-100'
-              : 'border-white/10 bg-white/4 text-slate-300 hover:border-cyan-300/18 hover:text-white'"
+              ? 'border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]'
+              : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.18)] hover:text-[var(--text-1)]'"
           >
             # {{ tag.name }}
           </RouterLink>
         </div>
-        <div class="mt-6 rounded-[20px] border border-dashed border-white/10 bg-black/16 p-5">
-          <p class="text-sm text-slate-300 leading-7">
-            当你不确定从哪里开始，搜索页会是更直接的入口；当你已经知道主题，分类与标签会更高效。
+        <div class="mt-6 rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+          <p class="text-sm text-[var(--text-3)] leading-7">
+            当你不确定从哪里开始，搜索页会更直接；当你已经知道主题，分类与标签会更高效。
           </p>
           <RouterLink to="/search" class="ui-btn ui-btn-ghost mt-5 text-sm">
             进入搜索页

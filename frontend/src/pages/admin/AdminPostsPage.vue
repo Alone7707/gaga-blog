@@ -165,34 +165,34 @@ function resolveErrorMessage(error: unknown) {
       </template>
 
       <div class="grid gap-4 xl:grid-cols-4">
-        <article class="rounded-[22px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(12,27,41,0.96),rgba(7,17,28,0.92))] p-5">
+        <article class="rounded-[22px] border border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f8fbff,#ffffff)] p-5">
           <p class="editor-kicker">文章总量</p>
-          <p class="mt-4 text-[38px] text-white font-semibold">{{ pagination.total }}</p>
-          <p class="mt-3 text-xs text-cyan-200/80">覆盖当前筛选条件下的内容范围</p>
+          <p class="mt-4 text-[38px] text-[var(--text-1)] font-semibold">{{ pagination.total }}</p>
+          <p class="mt-3 text-xs text-[var(--text-3)]">覆盖当前筛选条件下的内容范围</p>
         </article>
-        <article class="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,22,35,0.92),rgba(9,16,28,0.88))] p-5">
+        <article class="rounded-[22px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#fbfcfe)] p-5">
           <p class="editor-kicker">草稿</p>
-          <p class="mt-4 text-[38px] text-white font-semibold">{{ draftCount }}</p>
-          <p class="mt-3 text-xs text-slate-400">仍需编辑或待发布的文章</p>
+          <p class="mt-4 text-[38px] text-[var(--text-1)] font-semibold">{{ draftCount }}</p>
+          <p class="mt-3 text-xs text-[var(--text-3)]">仍需编辑或待发布的文章</p>
         </article>
-        <article class="rounded-[22px] border border-emerald-400/14 bg-[linear-gradient(180deg,rgba(10,28,28,0.96),rgba(8,17,26,0.92))] p-5">
+        <article class="rounded-[22px] border border-[rgba(18,183,106,0.14)] bg-[linear-gradient(180deg,#f4fdf8,#ffffff)] p-5">
           <p class="editor-kicker">已发布</p>
-          <p class="mt-4 text-[38px] text-white font-semibold">{{ publishedCount }}</p>
-          <p class="mt-3 text-xs text-emerald-200/80">当前对外可见的公开内容</p>
+          <p class="mt-4 text-[38px] text-[var(--text-1)] font-semibold">{{ publishedCount }}</p>
+          <p class="mt-3 text-xs text-[var(--success)]">当前对外可见的公开内容</p>
         </article>
-        <article class="rounded-[22px] border border-amber-400/14 bg-[linear-gradient(180deg,rgba(33,24,12,0.96),rgba(13,16,24,0.92))] p-5">
+        <article class="rounded-[22px] border border-[rgba(247,144,9,0.14)] bg-[linear-gradient(180deg,#fffaf2,#ffffff)] p-5">
           <p class="editor-kicker">最近更新</p>
-          <p class="mt-4 text-base text-white font-semibold leading-7">
+          <p class="mt-4 text-base text-[var(--text-1)] font-semibold leading-7">
             {{ formatDateTime(latestUpdatedAt) }}
           </p>
-          <p class="mt-3 text-xs text-amber-200/80">已归档 {{ archivedCount }} 篇</p>
+          <p class="mt-3 text-xs text-[var(--warning)]">已归档 {{ archivedCount }} 篇</p>
         </article>
       </div>
 
-      <div class="mt-6 rounded-[24px] border border-white/8 bg-black/16 p-4 md:p-5">
+      <div class="mt-6 rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 md:p-5">
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_220px_auto] xl:items-end">
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300">搜索文章</span>
+            <span class="mb-2 block text-sm text-[var(--text-2)]">搜索文章</span>
             <input
               v-model="queryForm.keyword"
               type="text"
@@ -203,7 +203,7 @@ function resolveErrorMessage(error: unknown) {
           </label>
 
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300">状态筛选</span>
+            <span class="mb-2 block text-sm text-[var(--text-2)]">状态筛选</span>
             <select v-model="queryForm.status" class="ui-select">
               <option v-for="option in statusOptions" :key="option.value || 'all'" :value="option.value">
                 {{ option.label }}
@@ -221,7 +221,7 @@ function resolveErrorMessage(error: unknown) {
           </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-4)]">
           <div class="flex flex-wrap items-center gap-3">
             <span>{{ totalLabel }}</span>
             <span class="ui-badge">分类筛选下一轮再接入</span>
@@ -233,17 +233,17 @@ function resolveErrorMessage(error: unknown) {
     </SectionCard>
 
     <SectionCard title="文章列表" description="标题作为主视觉，状态、分类、更新时间围绕它组织。" variant="panel">
-      <div v-if="loading" class="rounded-[20px] border border-white/8 bg-black/16 px-5 py-14 text-center text-sm text-slate-300">
+      <div v-if="loading" class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
         正在加载文章列表...
       </div>
 
-      <div v-else-if="errorMessage" class="rounded-[20px] border border-rose-400/20 bg-rose-500/10 px-5 py-10">
-        <p class="text-sm text-rose-200">
+      <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-5 py-10">
+        <p class="text-sm text-[var(--danger)]">
           {{ errorMessage }}
         </p>
       </div>
 
-      <div v-else-if="!hasData" class="rounded-[20px] border border-dashed border-white/10 bg-black/16 px-5 py-14 text-center text-sm text-slate-300">
+      <div v-else-if="!hasData" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">
         当前暂无符合条件的文章，可以先新建一篇内容。
       </div>
 
@@ -251,34 +251,34 @@ function resolveErrorMessage(error: unknown) {
         <article
           v-for="post in posts"
           :key="post.id"
-          class="rounded-[22px] border border-white/8 bg-black/16 p-5 transition hover:border-cyan-300/18 hover:bg-white/4"
+          class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-5 transition hover:border-[rgba(76,139,245,0.18)] hover:shadow-[var(--shadow-xs)]"
         >
           <div class="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_180px_180px_220px] xl:items-start">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <h3 class="truncate text-[18px] text-white font-semibold leading-7">{{ post.title }}</h3>
+                <h3 class="truncate text-[18px] text-[var(--text-1)] font-semibold leading-7">{{ post.title }}</h3>
                 <span :class="getStatusClass(post.status)">
                   {{ getStatusLabel(post.status) }}
                 </span>
               </div>
-              <p class="mt-2 text-xs text-slate-500 editor-mono">/{{ post.slug }}</p>
-              <p class="mt-3 line-clamp-2 text-sm text-slate-300 leading-7">
+              <p class="mt-2 text-xs text-[var(--text-4)] editor-mono">/{{ post.slug }}</p>
+              <p class="mt-3 line-clamp-2 text-sm text-[var(--text-3)] leading-7">
                 {{ post.summary || '暂无摘要，后续可在编辑页补充。' }}
               </p>
-              <div class="mt-4 flex flex-wrap gap-2 text-xs text-slate-400">
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-[var(--text-4)]">
                 <span class="ui-badge">分类：{{ post.category?.name || '未分类' }}</span>
                 <span class="ui-badge">标签 {{ post.counts.tags }}</span>
                 <span class="ui-badge">评论 {{ post.counts.comments }}</span>
               </div>
             </div>
 
-            <div class="text-sm text-slate-300 leading-7">
-              <p class="text-xs uppercase tracking-[0.16em] text-slate-500">更新时间</p>
+            <div class="text-sm text-[var(--text-3)] leading-7">
+              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-4)]">更新时间</p>
               <p class="mt-2 editor-mono">{{ formatDateTime(post.updatedAt) }}</p>
             </div>
 
-            <div class="text-sm text-slate-300 leading-7">
-              <p class="text-xs uppercase tracking-[0.16em] text-slate-500">发布时间</p>
+            <div class="text-sm text-[var(--text-3)] leading-7">
+              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-4)]">发布时间</p>
               <p class="mt-2 editor-mono">{{ formatDateTime(post.publishedAt) }}</p>
             </div>
 
@@ -297,7 +297,7 @@ function resolveErrorMessage(error: unknown) {
         </article>
       </div>
 
-      <div class="mt-5 flex flex-col gap-3 border-t border-white/8 pt-5 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
+      <div class="mt-5 flex flex-col gap-3 border-t border-[var(--line-soft)] pt-5 text-sm text-[var(--text-4)] md:flex-row md:items-center md:justify-between">
         <p>第 {{ pagination.page }} / {{ Math.max(pagination.totalPages, 1) }} 页</p>
         <div class="flex items-center gap-3">
           <button
