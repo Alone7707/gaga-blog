@@ -4,6 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 
 import { getPublicCategories, getPublicCategoryPosts } from '../../api/public'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicFeedbackState from '../../components/public/PublicFeedbackState.vue'
 import PostCard from '../../components/public/PostCard.vue'
 import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { PublicCategorySummary, PublicPostListItem } from '../../types/public'
@@ -28,6 +29,7 @@ const currentCategory = ref<PublicCategorySummary | null>(null)
 const currentSlug = computed(() => String(route.params.slug ?? ''))
 const postCards = computed(() => posts.value.map((item) => toPostCardItem(item)))
 const siblingCategories = computed(() => categories.value.filter((item) => (item.postCount ?? 0) > 0))
+const relatedCategories = computed(() => siblingCategories.value.filter((item) => item.slug !== currentSlug.value).slice(0, 6))
 
 async function loadCategories() {
   sidebarLoading.value = true
@@ -124,32 +126,50 @@ watch(
     />
 
     <div class="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-      <SectionCard title="全部分类" description="左侧保留公开分类入口，便于用户快速切换浏览范围。" variant="dashed">
-        <div v-if="sidebarLoading" class="text-sm text-[var(--text-3)] leading-7">
-          分类入口加载中...
-        </div>
+      <div class="space-y-6">
+        <SectionCard title="全部分类" description="左侧保留公开分类入口，便于快速切换浏览范围。" variant="dashed">
+          <div v-if="sidebarLoading">
+            <PublicFeedbackState state="loading" message="分类入口加载中..." inset />
+          </div>
 
-        <div v-else-if="sidebarErrorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)] leading-7">
-          {{ sidebarErrorMessage }}
-        </div>
+          <div v-else-if="sidebarErrorMessage">
+            <PublicFeedbackState state="error" :message="sidebarErrorMessage" inset />
+          </div>
 
-        <div v-else class="space-y-3">
-          <RouterLink
-            v-for="category in siblingCategories"
-            :key="category.id"
-            :to="`/categories/${category.slug}`"
-            class="block rounded-[18px] border px-4 py-3 text-sm transition"
-            :class="category.slug === currentSlug
-              ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] text-[var(--text-1)]'
-              : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.22)]'"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <span>{{ category.name }}</span>
-              <span class="text-xs text-[var(--text-4)]">{{ category.postCount ?? 0 }}</span>
-            </div>
-          </RouterLink>
-        </div>
-      </SectionCard>
+          <div v-else class="space-y-3">
+            <RouterLink
+              v-for="category in siblingCategories"
+              :key="category.id"
+              :to="`/categories/${category.slug}`"
+              class="block rounded-[18px] border px-4 py-3 text-sm transition"
+              :class="category.slug === currentSlug
+                ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] text-[var(--text-1)]'
+                : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.22)]'"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span>{{ category.name }}</span>
+                <span class="text-xs text-[var(--text-4)]">{{ category.postCount ?? 0 }}</span>
+              </div>
+            </RouterLink>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="推荐切换" description="保留若干同级分类，帮助用户横向跳转。" variant="panel">
+          <div class="space-y-3">
+            <RouterLink
+              v-for="category in relatedCategories"
+              :key="category.id"
+              :to="`/categories/${category.slug}`"
+              class="block rounded-[18px] border border-[var(--line-soft)] bg-white px-4 py-4 transition hover:border-[rgba(76,139,245,0.22)]"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-sm font-medium text-[var(--text-1)]">{{ category.name }}</span>
+                <span class="text-xs text-[var(--text-4)]">{{ category.postCount ?? 0 }} 篇</span>
+              </div>
+            </RouterLink>
+          </div>
+        </SectionCard>
+      </div>
 
       <SectionCard
         :title="currentCategory ? `${currentCategory.name} · 分类文章` : '分类文章列表'"
@@ -157,16 +177,16 @@ watch(
         variant="hero"
         size="lg"
       >
-        <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
-          正在加载分类文章...
+        <div v-if="loading">
+          <PublicFeedbackState state="loading" message="正在加载分类文章..." />
         </div>
 
-        <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
-          {{ errorMessage }}
+        <div v-else-if="errorMessage">
+          <PublicFeedbackState state="error" :message="errorMessage" />
         </div>
 
-        <div v-else-if="!postCards.length" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
-          当前分类下还没有公开文章。
+        <div v-else-if="!postCards.length">
+          <PublicFeedbackState state="empty" message="当前分类下还没有公开文章。" />
         </div>
 
         <div v-else class="space-y-4">
@@ -177,24 +197,28 @@ watch(
           />
         </div>
 
-        <div v-if="pagination.totalPages > 1" class="mt-6 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="pagination.page <= 1"
-            @click="changePage(pagination.page - 1)"
-          >
-            上一页
-          </button>
-          <span class="text-sm text-[var(--text-3)]">{{ pagination.page }} / {{ pagination.totalPages }}</span>
-          <button
-            type="button"
-            class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="pagination.page >= pagination.totalPages"
-            @click="changePage(pagination.page + 1)"
-          >
-            下一页
-          </button>
+        <div v-if="pagination.totalPages > 1" class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-soft)] pt-5">
+          <p class="text-sm text-[var(--text-3)]">
+            共 {{ pagination.total }} 篇，当前第 {{ pagination.page }} / {{ pagination.totalPages }} 页
+          </p>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="pagination.page <= 1"
+              @click="changePage(pagination.page - 1)"
+            >
+              上一页
+            </button>
+            <button
+              type="button"
+              class="ui-btn ui-btn-secondary text-sm disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="pagination.page >= pagination.totalPages"
+              @click="changePage(pagination.page + 1)"
+            >
+              下一页
+            </button>
+          </div>
         </div>
       </SectionCard>
     </div>

@@ -15,9 +15,9 @@ const isFeatured = computed(() => Boolean(props.featured || props.post.featured)
 
 <template>
   <article
-    class="group overflow-hidden rounded-[24px] border transition duration-200"
+    class="group overflow-hidden rounded-[26px] border transition duration-200"
     :class="isFeatured
-      ? 'border-[var(--line-soft)] bg-[linear-gradient(135deg,#ffffff,#f8fbff)] shadow-[var(--shadow-sm)]'
+      ? 'border-[rgba(76,139,245,0.16)] bg-[linear-gradient(135deg,#ffffff,#f8fbff)] shadow-[var(--shadow-sm)]'
       : 'border-[var(--line-soft)] bg-white hover:-translate-y-[2px] hover:border-[rgba(76,139,245,0.22)] hover:shadow-[var(--shadow-sm)]'
     "
   >
@@ -31,7 +31,7 @@ const isFeatured = computed(() => Boolean(props.featured || props.post.featured)
           <span class="text-[var(--text-4)]">{{ post.readingTime }}</span>
         </div>
 
-        <h3 class="mt-4 text-[22px] text-[var(--text-1)] font-semibold leading-[1.35] md:text-[28px]" :class="isFeatured ? 'md:text-[34px]' : ''">
+        <h3 class="mt-4 text-[22px] text-[var(--text-1)] font-semibold leading-[1.35] tracking-[-0.03em] md:text-[28px]" :class="isFeatured ? 'md:text-[34px]' : ''">
           {{ post.title }}
         </h3>
 
@@ -50,7 +50,7 @@ const isFeatured = computed(() => Boolean(props.featured || props.post.featured)
         </div>
       </div>
 
-      <div class="flex flex-col justify-between gap-5 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+      <div class="flex flex-col justify-between gap-5 rounded-[22px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f9fbfe)] p-5">
         <div>
           <p class="editor-kicker">文章档案</p>
           <p class="mt-3 text-sm text-[var(--text-2)] leading-7">

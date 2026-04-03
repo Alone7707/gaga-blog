@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 
 import { getPublicStaticPage, getPublicSiteOverview } from '../../api/site'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicFeedbackState from '../../components/public/PublicFeedbackState.vue'
 import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { PublicSiteOverview, PublicStaticPage } from '../../types/site'
 import { formatPublicDate } from '../../utils/public-post'
@@ -52,6 +53,21 @@ const latestPostLink = computed(() => {
   return `/posts/${latest.slug}`
 })
 
+const siteQuickFacts = computed(() => [
+  {
+    label: '公开文章',
+    value: overview.value?.stats.publishedPostCount ?? 0,
+  },
+  {
+    label: '已审评论',
+    value: overview.value?.stats.approvedCommentCount ?? 0,
+  },
+  {
+    label: '最近更新',
+    value: page.value?.updatedAt ? formatPublicDate(page.value.updatedAt) : '待补充',
+  },
+])
+
 async function loadAboutPage() {
   loading.value = true
   errorMessage.value = ''
@@ -84,24 +100,18 @@ onMounted(() => {
 
 <template>
   <div class="page-grid">
-    <section v-if="loading" class="panel-surface rounded-[28px] p-8">
-      <p class="text-sm text-[var(--text-3)] leading-7">
-        正在加载关于页内容...
-      </p>
-    </section>
+    <div v-if="loading">
+      <PublicFeedbackState state="loading" message="正在加载关于页内容..." />
+    </div>
 
-    <section v-else-if="errorMessage" class="panel-surface rounded-[28px] border-[rgba(240,68,56,0.14)] bg-[linear-gradient(180deg,#fff7f6,#ffffff)] p-8">
-      <p class="editor-kicker text-[var(--danger)]">About / Load Failed</p>
-      <h2 class="mt-4 text-[34px] font-semibold text-[var(--text-1)]">
-        关于页暂时不可用
-      </h2>
-      <p class="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-3)]">
-        {{ errorMessage }}
-      </p>
-      <RouterLink to="/" class="ui-btn ui-btn-ghost mt-6 text-sm">
-        回到首页
-      </RouterLink>
-    </section>
+    <div v-else-if="errorMessage" class="page-grid">
+      <PublicFeedbackState state="error" title="关于页暂时不可用" :message="errorMessage" />
+      <div>
+        <RouterLink to="/" class="ui-btn ui-btn-ghost text-sm">
+          回到首页
+        </RouterLink>
+      </div>
+    </div>
 
     <template v-else>
       <PublicPageHero
@@ -119,30 +129,48 @@ onMounted(() => {
         ]"
         aside-title="站点概览"
         aside-text="关于页已经接入公开静态页和站点概览接口，后台保存后可直接在前台可见。"
-        :aside-stats="[
-          { label: '公开文章', value: overview?.stats.publishedPostCount ?? 0 },
-          { label: '已审评论', value: overview?.stats.approvedCommentCount ?? 0 },
-        ]"
+        :aside-stats="siteQuickFacts"
       />
 
-      <SectionCard
-        title="正文内容"
-        description="当前 about 页面直接消费 /api/public/site/pages/about，正文为空时给出明确占位。"
-        variant="hero"
-        size="lg"
-      >
-        <article
-          v-if="renderedContent"
-          class="article-prose rounded-[24px] border border-[var(--line-soft)] bg-white p-6 md:p-8"
-          v-html="renderedContent"
-        />
-        <div
-          v-else
-          class="rounded-[24px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-6 text-sm text-[var(--text-3)] leading-7"
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+        <SectionCard
+          title="正文内容"
+          description="当前 about 页面直接消费 /api/public/site/pages/about，正文为空时给出明确占位。"
+          variant="hero"
+          size="lg"
         >
-          当前后台还没有填写关于页正文内容。可在后台站点设置补充 static.about.content 后，前台这里会自动展示。
-        </div>
-      </SectionCard>
+          <article
+            v-if="renderedContent"
+            class="article-prose rounded-[24px] border border-[var(--line-soft)] bg-white p-6 md:p-8"
+            v-html="renderedContent"
+          />
+          <div v-else>
+            <PublicFeedbackState state="empty" message="当前后台还没有填写关于页正文内容。可在后台站点设置补充 static.about.content 后，前台这里会自动展示。" />
+          </div>
+        </SectionCard>
+
+        <SectionCard title="延展入口" description="关于页同时承担品牌说明和站内分流职责。" variant="panel">
+          <div class="space-y-4">
+            <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+              <p class="editor-kicker">内容说明</p>
+              <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
+                可在后台持续维护作者介绍、站点目标、合作方式、联系方式等内容，让关于页成为可信入口，而不是空白页。
+              </p>
+            </div>
+            <div class="grid gap-3">
+              <RouterLink to="/archives" class="ui-btn ui-btn-secondary justify-start text-sm">
+                浏览归档
+              </RouterLink>
+              <RouterLink to="/categories" class="ui-btn ui-btn-secondary justify-start text-sm">
+                浏览分类
+              </RouterLink>
+              <RouterLink to="/search" class="ui-btn ui-btn-secondary justify-start text-sm">
+                站内搜索
+              </RouterLink>
+            </div>
+          </div>
+        </SectionCard>
+      </div>
     </template>
   </div>
 </template>

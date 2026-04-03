@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { getPublicArchives } from '../../api/public'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicFeedbackState from '../../components/public/PublicFeedbackState.vue'
 import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { PublicArchiveYearBucket } from '../../types/public'
 import { formatPublicDate } from '../../utils/public-post'
@@ -15,6 +16,7 @@ const totalPosts = ref(0)
 
 const totalMonths = computed(() => archives.value.reduce((sum, year) => sum + year.months.length, 0))
 const latestYear = computed(() => archives.value[0]?.year ?? '--')
+const latestMonths = computed(() => archives.value[0]?.months.slice(0, 3) ?? [])
 
 async function loadArchives() {
   loading.value = true
@@ -63,49 +65,66 @@ onMounted(() => {
       ]"
     />
 
-    <SectionCard title="归档概览" description="按年月回溯全部公开文章，满足最小可交付的归档浏览能力。" variant="panel">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
-          <p class="editor-kicker">文章总量</p>
-          <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
-            {{ totalPosts }}
-          </p>
-          <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
-            当前对外可见并已发布的文章数量。
-          </p>
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <SectionCard title="归档概览" description="时间索引、汇总数字与近期月份入口统一放在首屏。" variant="panel">
+        <div class="grid gap-4 md:grid-cols-3">
+          <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+            <p class="editor-kicker">文章总量</p>
+            <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
+              {{ totalPosts }}
+            </p>
+            <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
+              当前对外可见并已发布的文章数量。
+            </p>
+          </div>
+          <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+            <p class="editor-kicker">年份分组</p>
+            <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
+              {{ archives.length }}
+            </p>
+            <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
+              当前归档中包含的年份数量。
+            </p>
+          </div>
+          <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
+            <p class="editor-kicker">月份分组</p>
+            <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
+              {{ totalMonths }}
+            </p>
+            <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
+              用于快速定位内容发布时间区间。
+            </p>
+          </div>
         </div>
-        <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
-          <p class="editor-kicker">年份分组</p>
-          <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
-            {{ archives.length }}
-          </p>
-          <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
-            当前归档中包含的年份数量。
-          </p>
+      </SectionCard>
+
+      <SectionCard title="近期月份" description="右侧展示最新年份中的近期月份，作为快速跳转入口。" variant="dashed">
+        <div class="space-y-3">
+          <div
+            v-for="month in latestMonths"
+            :key="month.month"
+            class="rounded-[18px] border border-[var(--line-soft)] bg-white px-4 py-4"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm font-medium text-[var(--text-1)]">{{ month.monthLabel }}</span>
+              <span class="text-xs text-[var(--text-4)]">{{ month.count }} 篇</span>
+            </div>
+          </div>
         </div>
-        <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
-          <p class="editor-kicker">月份分组</p>
-          <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
-            {{ totalMonths }}
-          </p>
-          <p class="mt-2 text-sm text-[var(--text-3)] leading-7">
-            用于快速定位内容发布时间区间。
-          </p>
-        </div>
-      </div>
-    </SectionCard>
+      </SectionCard>
+    </div>
 
-    <SectionCard title="归档列表" description="按照年份和月份分组展示文章标题、发布时间及分类入口。" variant="hero" size="lg">
-      <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
-        正在加载归档数据...
+    <SectionCard title="归档列表" description="按照年份和月份分组展示文章标题、发布时间及主题入口。" variant="hero" size="lg">
+      <div v-if="loading">
+        <PublicFeedbackState state="loading" message="正在加载归档数据..." />
       </div>
 
-      <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
-        {{ errorMessage }}
+      <div v-else-if="errorMessage">
+        <PublicFeedbackState state="error" :message="errorMessage" />
       </div>
 
-      <div v-else-if="!archives.length" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
-        当前还没有可展示的公开归档内容。
+      <div v-else-if="!archives.length">
+        <PublicFeedbackState state="empty" message="当前还没有可展示的公开归档内容。" />
       </div>
 
       <div v-else class="space-y-8">
@@ -117,7 +136,7 @@ onMounted(() => {
           <div class="flex flex-col gap-2 border-b border-[var(--line-soft)] pb-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p class="editor-kicker">年度归档</p>
-              <h3 class="mt-3 text-[28px] text-[var(--text-1)] font-semibold">
+              <h3 class="mt-3 text-[28px] text-[var(--text-1)] font-semibold tracking-[-0.03em]">
                 {{ year.year }}
               </h3>
             </div>

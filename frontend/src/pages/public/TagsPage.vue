@@ -4,6 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { getPublicTags } from '../../api/public'
 import SectionCard from '../../components/common/SectionCard.vue'
+import PublicFeedbackState from '../../components/public/PublicFeedbackState.vue'
 import PublicPageHero from '../../components/public/PublicPageHero.vue'
 import type { PublicTagSummary } from '../../types/public'
 
@@ -82,7 +83,7 @@ watch(
     <PublicPageHero
       kicker="Tags / Topic Network"
       title="标签网络"
-      description="标签承担横向关联，不和分类抢角色。它更像主题网络的快速跳板，让相近话题在更短路径上被看见。"
+      description="标签承担横向关联，不和分类抢角色。它更像主题网络的轻量跳板，让相近话题在更短路径上被看见。"
       :meta="[
         `${visibleTags.length} 个公开标签`,
         `${totalPosts} 次文章关联`,
@@ -99,62 +100,54 @@ watch(
       ]"
     />
 
-    <SectionCard title="全部公开标签" description="保留轻量胶囊结构，阅读成本更低，信息密度更高。" variant="panel" size="lg">
-      <div v-if="loading" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
-        正在加载公开标签列表...
-      </div>
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <SectionCard title="全部公开标签" description="用统一胶囊结构承接高密度主题入口，视觉更轻，浏览更快。" variant="panel" size="lg">
+        <div v-if="loading">
+          <PublicFeedbackState state="loading" message="正在加载公开标签列表..." />
+        </div>
 
-      <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
-        {{ errorMessage }}
-      </div>
+        <div v-else-if="errorMessage">
+          <PublicFeedbackState state="error" :message="errorMessage" />
+        </div>
 
-      <div v-else-if="!visibleTags.length" class="rounded-[20px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 text-sm text-[var(--text-3)] leading-7">
-        当前还没有可展示的公开标签。
-      </div>
+        <div v-else-if="!visibleTags.length">
+          <PublicFeedbackState state="empty" message="当前还没有可展示的公开标签。" />
+        </div>
 
-      <div v-else class="flex flex-wrap gap-3">
-        <button
-          v-for="tag in visibleTags"
-          :key="tag.id"
-          type="button"
-          class="rounded-full border px-4 py-2 text-sm transition"
-          :class="tag.slug === normalizedActiveSlug
-            ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]'
-            : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]'"
-          @click="selectTag(tag.slug)"
-        >
-          # {{ tag.name }} · {{ tag.postCount ?? 0 }}
-        </button>
-      </div>
-    </SectionCard>
-
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <SectionCard
-        v-if="activeTag"
-        :title="`# ${activeTag.name} · 当前焦点标签`"
-        description="标签详情页用于承接同主题文章集合浏览。"
-        variant="hero"
-      >
-        <div class="flex flex-col gap-4 rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p class="text-sm text-[var(--text-3)] leading-7">
-              当前标签共关联 {{ activeTag.postCount ?? 0 }} 篇公开文章，点击后进入对应的标签文章页。
-            </p>
-            <p class="mt-3 text-xs text-[var(--text-4)] editor-mono">
-              slug / {{ activeTag.slug }}
-            </p>
-          </div>
-          <RouterLink
-            :to="`/tags/${activeTag.slug}`"
-            class="ui-btn ui-btn-primary text-sm"
+        <div v-else class="flex flex-wrap gap-3">
+          <button
+            v-for="tag in visibleTags"
+            :key="tag.id"
+            type="button"
+            class="rounded-full border px-4 py-3 text-sm transition"
+            :class="tag.slug === normalizedActiveSlug
+              ? 'border-[rgba(76,139,245,0.22)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] shadow-[var(--shadow-xs)]'
+              : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]'"
+            @click="selectTag(tag.slug)"
           >
-            查看标签文章
-          </RouterLink>
+            # {{ tag.name }} · {{ tag.postCount ?? 0 }}
+          </button>
         </div>
       </SectionCard>
 
-      <SectionCard title="高频标签" description="右侧只保留最常用的若干个主题。" variant="dashed">
-        <div class="flex flex-wrap gap-2">
+      <SectionCard title="浏览建议" description="右侧只保留当前焦点和高频标签，横向跳转更直接。" variant="dashed">
+        <div v-if="activeTag" class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5">
+          <p class="editor-kicker">当前焦点</p>
+          <h3 class="mt-3 text-[22px] text-[var(--text-1)] font-semibold tracking-[-0.03em]">
+            # {{ activeTag.name }}
+          </h3>
+          <p class="mt-3 text-sm text-[var(--text-3)] leading-7">
+            当前标签共关联 {{ activeTag.postCount ?? 0 }} 篇公开文章，点击后进入对应的标签文章页。
+          </p>
+          <p class="mt-4 text-xs text-[var(--text-4)] editor-mono">
+            slug / {{ activeTag.slug }}
+          </p>
+          <RouterLink :to="`/tags/${activeTag.slug}`" class="ui-btn ui-btn-primary mt-5 text-sm">
+            查看标签文章
+          </RouterLink>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
           <RouterLink
             v-for="tag in topTags"
             :key="tag.id"
