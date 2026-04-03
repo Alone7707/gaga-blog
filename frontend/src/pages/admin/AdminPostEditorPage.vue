@@ -357,76 +357,76 @@ function resolveErrorMessage(error: unknown, fallback: string) {
     <SectionCard :title="pageTitle" :description="pageDescription">
       <template #action>
         <div class="flex flex-wrap items-center justify-end gap-3">
-          <button type="button" class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white" @click="handleBack">返回列表</button>
-          <button type="button" class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" :disabled="saving || loading || actionLoading !== ''" @click="handleSubmit">{{ saving ? '正在保存...' : (isEditMode ? '保存内容' : '创建文章') }}</button>
+          <button type="button" class="ui-btn ui-btn-secondary min-h-[40px] px-4 text-sm" @click="handleBack">返回列表</button>
+          <button type="button" class="ui-btn ui-btn-primary min-h-[40px] px-4 text-sm" :disabled="saving || loading || actionLoading !== ''" @click="handleSubmit">{{ saving ? '正在保存...' : (isEditMode ? '保存内容' : '创建文章') }}</button>
         </div>
       </template>
 
-      <div v-if="loading" class="rounded-6 border border-white/8 bg-slate-950/35 px-5 py-14 text-center text-sm text-slate-300">正在加载文章详情...</div>
+      <div v-if="loading" class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-5 py-14 text-center text-sm text-[var(--text-3)]">正在加载文章详情...</div>
 
       <div v-else class="space-y-5">
-        <div v-if="errorMessage" class="rounded-6 border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ errorMessage }}</div>
-        <div v-if="successMessage" class="rounded-6 border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{{ successMessage }}</div>
+        <div v-if="errorMessage" class="rounded-[18px] border border-[rgba(240,68,56,0.18)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">{{ errorMessage }}</div>
+        <div v-if="successMessage" class="rounded-[18px] border border-[rgba(18,183,106,0.18)] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">{{ successMessage }}</div>
 
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_340px]">
           <div class="space-y-6">
-            <section class="rounded-6 border border-white/8 bg-slate-950/35 p-5">
+            <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
               <div class="flex items-center justify-between gap-3">
-                <h3 class="text-lg text-white font-semibold">基础信息</h3>
-                <span class="rounded-full border border-cyan-300/20 px-3 py-1 text-xs text-cyan-200">最小可用正式版</span>
+                <h3 class="text-lg text-[var(--text-1)] font-semibold">基础信息</h3>
+                <span class="ui-badge ui-badge-status-success">最小可用正式版</span>
               </div>
               <div class="mt-5 grid gap-4 md:grid-cols-2">
                 <label class="block md:col-span-2">
-                  <span class="mb-2 block text-sm text-slate-300">标题</span>
-                  <input v-model="form.title" type="text" maxlength="150" placeholder="请输入文章标题" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+                  <span class="mb-2 block text-sm text-[var(--text-2)]">标题</span>
+                  <input v-model="form.title" type="text" maxlength="150" placeholder="请输入文章标题" class="ui-input">
                 </label>
                 <label class="block md:col-span-2">
-                  <span class="mb-2 block text-sm text-slate-300">Slug</span>
-                  <input v-model="form.slug" type="text" maxlength="150" placeholder="可选，留空时由后端自动生成" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+                  <span class="mb-2 block text-sm text-[var(--text-2)]">Slug</span>
+                  <input v-model="form.slug" type="text" maxlength="150" placeholder="可选，留空时由后端自动生成" class="ui-input">
                 </label>
                 <label class="block md:col-span-2">
-                  <span class="mb-2 block text-sm text-slate-300">摘要</span>
-                  <textarea v-model="form.summary" rows="4" maxlength="500" placeholder="请输入文章摘要，用于列表和详情摘要展示" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70" />
+                  <span class="mb-2 block text-sm text-[var(--text-2)]">摘要</span>
+                  <textarea v-model="form.summary" rows="4" maxlength="500" placeholder="请输入文章摘要，用于列表和详情摘要展示" class="ui-textarea" />
                 </label>
                 <label class="block md:col-span-2">
-                  <span class="mb-2 block text-sm text-slate-300">正文（Markdown）</span>
-                  <textarea v-model="form.contentMarkdown" rows="18" placeholder="请输入 Markdown 正文内容" class="min-h-90 w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-cyan-300/70 leading-7" />
+                  <span class="mb-2 block text-sm text-[var(--text-2)]">正文（Markdown）</span>
+                  <textarea v-model="form.contentMarkdown" rows="18" placeholder="请输入 Markdown 正文内容" class="ui-textarea min-h-[420px] font-mono text-sm leading-7" />
                 </label>
               </div>
             </section>
 
-            <section class="rounded-6 border border-white/8 bg-slate-950/35 p-5">
+            <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <h3 class="text-lg text-white font-semibold">分类与标签</h3>
-                  <p class="mt-2 text-sm text-slate-400">已从真实接口加载分类与标签数据，直接写入 categoryId 与 tagIds。</p>
+                  <h3 class="text-lg text-[var(--text-1)] font-semibold">分类与标签</h3>
+                  <p class="mt-2 text-sm text-[var(--text-3)]">已从真实接口加载分类与标签数据，直接写入 categoryId 与 tagIds。</p>
                 </div>
-                <button type="button" class="rounded-full border border-white/12 px-3 py-1.5 text-xs text-slate-200 transition hover:border-cyan-300/30 hover:text-white" :disabled="taxonomyLoading" @click="loadTaxonomyOptions">{{ taxonomyLoading ? '刷新中...' : '刷新选项' }}</button>
+                <button type="button" class="ui-btn ui-btn-secondary min-h-[36px] px-3 text-xs" :disabled="taxonomyLoading" @click="loadTaxonomyOptions">{{ taxonomyLoading ? '刷新中...' : '刷新选项' }}</button>
               </div>
 
-              <div v-if="taxonomyMessage" class="mt-4 rounded-6 border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">{{ taxonomyMessage }}</div>
+              <div v-if="taxonomyMessage" class="mt-4 rounded-[18px] border border-[rgba(247,144,9,0.2)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">{{ taxonomyMessage }}</div>
 
               <div class="mt-5 grid gap-4 md:grid-cols-2">
                 <label class="block">
-                  <span class="mb-2 block text-sm text-slate-300">分类</span>
-                  <select v-model="form.categoryId" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+                  <span class="mb-2 block text-sm text-[var(--text-2)]">分类</span>
+                  <select v-model="form.categoryId" class="ui-select">
                     <option value="">暂不设置分类</option>
                     <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}（{{ category.postCount }}）</option>
                   </select>
                 </label>
-                <div class="rounded-5 border border-white/8 bg-white/4 p-4 text-sm text-slate-300 leading-7">
-                  <p class="text-xs text-slate-400">当前分类</p>
-                  <p class="mt-3 text-white">{{ selectedCategory?.name || '未设置分类' }}</p>
-                  <p class="mt-2 text-xs text-slate-400">{{ selectedCategory?.description || '分类说明会在这里展示，便于编辑时快速确认。' }}</p>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4 text-sm text-[var(--text-3)] leading-7">
+                  <p class="text-xs text-[var(--text-4)]">当前分类</p>
+                  <p class="mt-3 text-[var(--text-1)] font-medium">{{ selectedCategory?.name || '未设置分类' }}</p>
+                  <p class="mt-2 text-xs text-[var(--text-3)]">{{ selectedCategory?.description || '分类说明会在这里展示，便于编辑时快速确认。' }}</p>
                 </div>
                 <div class="md:col-span-2">
                   <div class="mb-2 flex items-center justify-between gap-3">
-                    <span class="block text-sm text-slate-300">标签</span>
-                    <span class="text-xs text-slate-400">已选 {{ form.tagIds.length }} 个</span>
+                    <span class="block text-sm text-[var(--text-2)]">标签</span>
+                    <span class="text-xs text-[var(--text-4)]">已选 {{ form.tagIds.length }} 个</span>
                   </div>
-                  <div v-if="!hasTaxonomyData && !taxonomyLoading" class="rounded-5 border border-dashed border-white/12 bg-white/3 px-4 py-5 text-sm text-slate-400">暂无可选分类和标签，请先前往后台分类/标签管理页创建数据。</div>
-                  <div v-else class="flex flex-wrap gap-3 rounded-5 border border-white/8 bg-slate-950/30 p-4">
-                    <button v-for="tag in tags" :key="tag.id" type="button" class="rounded-full border px-3 py-2 text-xs transition" :class="form.tagIds.includes(tag.id) ? 'border-cyan-300/50 bg-cyan-400/15 text-cyan-100' : 'border-white/12 bg-white/4 text-slate-300 hover:border-cyan-300/30 hover:text-white'" @click="handleTagToggle(tag.id)">{{ tag.name }}</button>
+                  <div v-if="!hasTaxonomyData && !taxonomyLoading" class="rounded-[18px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] px-4 py-5 text-sm text-[var(--text-3)]">暂无可选分类和标签，请先前往后台分类/标签管理页创建数据。</div>
+                  <div v-else class="flex flex-wrap gap-3 rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                    <button v-for="tag in tags" :key="tag.id" type="button" class="rounded-full border px-3 py-2 text-xs font-medium transition" :class="form.tagIds.includes(tag.id) ? 'border-[rgba(76,139,245,0.24)] bg-[#e8f1ff] text-[#235fc4]' : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.26)] hover:text-[var(--text-1)]'" @click="handleTagToggle(tag.id)">{{ tag.name }}</button>
                   </div>
                 </div>
               </div>
@@ -434,63 +434,63 @@ function resolveErrorMessage(error: unknown, fallback: string) {
           </div>
 
           <div class="space-y-6">
-            <section class="rounded-6 border border-white/8 bg-slate-950/35 p-5">
-              <h3 class="text-lg text-white font-semibold">发布信息</h3>
-              <div class="mt-5 space-y-4 text-sm text-slate-300">
-                <div class="rounded-5 border border-cyan-300/15 bg-cyan-400/6 p-4">
-                  <p class="text-xs text-cyan-200">当前状态</p>
-                  <p class="mt-3 text-base text-slate-100 font-semibold">{{ currentStatusMeta.label }}</p>
-                  <p class="mt-2 text-sm text-slate-100 leading-6">{{ currentStatusMeta.hint }}</p>
+            <section class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
+              <h3 class="text-lg text-[var(--text-1)] font-semibold">发布信息</h3>
+              <div class="mt-5 space-y-4 text-sm text-[var(--text-3)]">
+                <div class="rounded-[18px] border border-[rgba(76,139,245,0.18)] bg-[#eef4ff] p-4">
+                  <p class="text-xs text-[#235fc4]">当前状态</p>
+                  <p class="mt-3 text-base text-[var(--text-1)] font-semibold">{{ currentStatusMeta.label }}</p>
+                  <p class="mt-2 text-sm text-[var(--text-2)] leading-6">{{ currentStatusMeta.hint }}</p>
                 </div>
-                <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                  <p class="text-xs text-slate-400">动作说明</p>
-                  <p class="mt-3 text-sm text-slate-300 leading-7">{{ actionHint }}</p>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                  <p class="text-xs text-[var(--text-4)]">动作说明</p>
+                  <p class="mt-3 text-sm text-[var(--text-2)] leading-7">{{ actionHint }}</p>
                 </div>
                 <div class="grid gap-3">
-                  <button type="button" class="rounded-full bg-emerald-400 px-4 py-2.5 text-sm text-slate-950 font-semibold transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canPublish || saving || loading || actionLoading !== ''" @click="handlePostAction('publish')">
+                  <button type="button" class="ui-btn min-h-[42px] w-full bg-[#17b26a] px-4 text-sm text-white font-semibold transition hover:bg-[#109d5d] disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canPublish || saving || loading || actionLoading !== ''" @click="handlePostAction('publish')">
                     {{ actionLoading === 'publish' ? '正在发布...' : '发布文章' }}
                   </button>
-                  <button type="button" class="rounded-full border border-white/12 px-4 py-2.5 text-sm text-slate-100 transition hover:border-cyan-300/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canUnpublish || saving || loading || actionLoading !== ''" @click="handlePostAction('unpublish')">
+                  <button type="button" class="ui-btn ui-btn-secondary min-h-[42px] w-full px-4 text-sm" :disabled="!canUnpublish || saving || loading || actionLoading !== ''" @click="handlePostAction('unpublish')">
                     {{ actionLoading === 'unpublish' ? '正在下线...' : '下线为草稿' }}
                   </button>
-                  <button type="button" class="rounded-full border border-amber-300/30 px-4 py-2.5 text-sm text-amber-100 transition hover:border-amber-200/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canArchive || saving || loading || actionLoading !== ''" @click="handlePostAction('archive')">
+                  <button type="button" class="ui-btn min-h-[42px] w-full border border-[rgba(247,144,9,0.26)] bg-[#fff3e4] px-4 text-sm text-[#b26700] font-semibold transition hover:bg-[#ffe9ce] disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canArchive || saving || loading || actionLoading !== ''" @click="handlePostAction('archive')">
                     {{ actionLoading === 'archive' ? '正在归档...' : '归档文章' }}
                   </button>
                 </div>
-                <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                  <p class="text-xs text-slate-400">文章路径</p>
-                  <p class="mt-3 break-all text-sm text-white leading-6">/{{ previewSlug }}</p>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                  <p class="text-xs text-[var(--text-4)]">文章路径</p>
+                  <p class="mt-3 break-all text-sm text-[var(--text-1)] leading-6">/{{ previewSlug }}</p>
                 </div>
-                <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                  <p class="text-xs text-slate-400">摘要预览</p>
-                  <p class="mt-3 text-sm text-slate-300 leading-7">{{ previewSummary }}</p>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                  <p class="text-xs text-[var(--text-4)]">摘要预览</p>
+                  <p class="mt-3 text-sm text-[var(--text-2)] leading-7">{{ previewSummary }}</p>
                 </div>
-                <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                  <p class="text-xs text-slate-400">选中标签</p>
+                <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                  <p class="text-xs text-[var(--text-4)]">选中标签</p>
                   <div class="mt-3 flex flex-wrap gap-2">
-                    <span v-if="selectedTags.length === 0" class="text-sm text-slate-400">未设置标签</span>
-                    <span v-for="tag in selectedTags" :key="tag.id" class="rounded-full border border-cyan-300/20 bg-cyan-400/8 px-3 py-1 text-xs text-cyan-100">{{ tag.name }}</span>
+                    <span v-if="selectedTags.length === 0" class="text-sm text-[var(--text-4)]">未设置标签</span>
+                    <span v-for="tag in selectedTags" :key="tag.id" class="rounded-full border border-[rgba(76,139,245,0.2)] bg-[#eef4ff] px-3 py-1 text-xs font-medium text-[#235fc4]">{{ tag.name }}</span>
                   </div>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-                  <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                    <p class="text-xs text-slate-400">正文长度</p>
-                    <p class="mt-3 text-sm text-white">{{ wordCount }} 字符</p>
+                  <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                    <p class="text-xs text-[var(--text-4)]">正文长度</p>
+                    <p class="mt-3 text-sm text-[var(--text-1)]">{{ wordCount }} 字符</p>
                   </div>
-                  <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                    <p class="text-xs text-slate-400">最近保存</p>
-                    <p class="mt-3 text-sm text-white">{{ formatDateTime(lastSavedAt || postDetail?.updatedAt || null) }}</p>
+                  <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                    <p class="text-xs text-[var(--text-4)]">最近保存</p>
+                    <p class="mt-3 text-sm text-[var(--text-1)]">{{ formatDateTime(lastSavedAt || postDetail?.updatedAt || null) }}</p>
                   </div>
-                  <div class="rounded-5 border border-white/8 bg-white/4 p-4">
-                    <p class="text-xs text-slate-400">发布时间</p>
-                    <p class="mt-3 text-sm text-white">{{ formatDateTime(postDetail?.publishedAt || null) }}</p>
+                  <div class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
+                    <p class="text-xs text-[var(--text-4)]">发布时间</p>
+                    <p class="mt-3 text-sm text-[var(--text-1)]">{{ formatDateTime(postDetail?.publishedAt || null) }}</p>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="rounded-6 border border-dashed border-cyan-300/20 bg-cyan-400/5 p-5 text-sm text-slate-300 leading-7">
-              <h3 class="text-base text-white font-semibold">联调说明</h3>
+            <section class="rounded-[24px] border border-dashed border-[rgba(76,139,245,0.22)] bg-[#f5f9ff] p-5 text-sm text-[var(--text-2)] leading-7">
+              <h3 class="text-base text-[var(--text-1)] font-semibold">联调说明</h3>
               <ul class="mt-4 space-y-2">
                 <li>• 新建走 POST /api/admin/posts，编辑走 PATCH /api/admin/posts/:id。</li>
                 <li>• 发布 / 下线 / 归档已切到 PATCH /api/admin/posts/:id/publish|unpublish|archive。</li>

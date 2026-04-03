@@ -17,9 +17,18 @@ async function handleLogout() {
 
 // 顶栏根据当前路径显示简要上下文，帮助后台形成清晰工作台感。
 const currentSection = computed(() => {
-  const matched = [...adminNavigation].reverse().find((item) => route.path === item.to || route.path.startsWith(`${item.to}/`))
+  const matched = [...adminNavigation].reverse().find((item) => isNavActive(item.to))
   return matched?.label ?? '内容后台'
 })
+
+// 后台导航高亮需要避开 /admin 对所有子路由误判的问题。
+function isNavActive(target: string) {
+  if (target === '/admin') {
+    return route.path === '/admin'
+  }
+
+  return route.path === target || route.path.startsWith(`${target}/`)
+}
 </script>
 
 <template>
@@ -42,8 +51,8 @@ const currentSection = computed(() => {
             :key="item.to"
             :to="item.to"
             class="flex items-center justify-between rounded-[18px] border px-4 py-3 text-sm transition"
-            :class="route.path === item.to || route.path.startsWith(`${item.to}/`)
-              ? 'border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--text-1)]'
+            :class="isNavActive(item.to)
+              ? 'border-[rgba(76,139,245,0.24)] bg-[#e8f1ff] text-[var(--text-1)] shadow-[var(--shadow-xs)]'
               : 'border-transparent bg-transparent text-[var(--text-3)] hover:border-[var(--line-soft)] hover:bg-[var(--bg-card-soft)] hover:text-[var(--text-1)]'"
           >
             <span>{{ item.label }}</span>
