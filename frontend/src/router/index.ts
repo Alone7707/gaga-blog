@@ -1,4 +1,4 @@
-import {
+﻿import {
   createRouter as createVueRouter,
   createWebHistory,
   type RouteLocationNormalized,
@@ -12,6 +12,7 @@ import AdminDashboardPage from '../pages/admin/AdminDashboardPage.vue'
 import AdminLoginPage from '../pages/admin/AdminLoginPage.vue'
 import AdminPostEditorPage from '../pages/admin/AdminPostEditorPage.vue'
 import AdminPostsPage from '../pages/admin/AdminPostsPage.vue'
+import AdminSettingsPage from '../pages/admin/AdminSettingsPage.vue'
 import AdminTagsPage from '../pages/admin/AdminTagsPage.vue'
 import ArchivesPage from '../pages/public/ArchivesPage.vue'
 import CategoriesPage from '../pages/public/CategoriesPage.vue'
@@ -169,6 +170,15 @@ const routes: RouteRecordRaw[] = [
         component: AdminTagsPage,
         meta: {
           title: '标签管理',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'settings',
+        name: 'admin-settings',
+        component: AdminSettingsPage,
+        meta: {
+          title: '站点设置',
           requiresAuth: true,
         },
       },
