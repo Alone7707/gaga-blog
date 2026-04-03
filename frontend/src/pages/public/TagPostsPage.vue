@@ -12,6 +12,7 @@ const route = useRoute()
 
 const loading = ref(false)
 const sidebarLoading = ref(false)
+const sidebarErrorMessage = ref('')
 const errorMessage = ref('')
 const posts = ref<PublicPostListItem[]>([])
 const tags = ref<PublicTagSummary[]>([])
@@ -29,10 +30,15 @@ const siblingTags = computed(() => tags.value.filter((item) => (item.postCount ?
 
 async function loadTags() {
   sidebarLoading.value = true
+  sidebarErrorMessage.value = ''
 
   try {
     const response = await getPublicTags()
     tags.value = response.list
+  }
+  catch (error) {
+    tags.value = []
+    sidebarErrorMessage.value = error instanceof Error ? error.message : '标签入口加载失败'
   }
   finally {
     sidebarLoading.value = false
@@ -99,6 +105,10 @@ watch(
     <SectionCard title="全部标签" description="左侧保留标签入口，支持围绕相同主题快速切换文章集合。">
       <div v-if="sidebarLoading" class="text-sm text-slate-300 leading-7">
         标签入口加载中...
+      </div>
+
+      <div v-else-if="sidebarErrorMessage" class="rounded-6 border border-rose-400/25 bg-rose-400/8 p-4 text-sm text-rose-100 leading-7">
+        {{ sidebarErrorMessage }}
       </div>
 
       <div v-else class="flex flex-wrap gap-3 lg:flex-col">

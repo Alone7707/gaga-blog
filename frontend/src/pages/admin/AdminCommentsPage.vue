@@ -330,7 +330,11 @@ function getActionButtonClass(action: AdminCommentReviewAction) {
   return 'border-amber-400/25 text-amber-200 hover:border-amber-300/40 hover:bg-amber-500/10'
 }
 
-function maskEmail(email: string) {
+function maskEmail(email: string | null | undefined) {
+  if (!email) {
+    return '--'
+  }
+
   const [name, domain] = email.split('@')
 
   if (!name || !domain) {

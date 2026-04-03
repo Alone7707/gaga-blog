@@ -19,7 +19,17 @@ const activeSlug = computed(() => String(route.query.slug ?? ''))
 // 仅展示有公开文章的分类，降低空入口干扰。
 const visibleCategories = computed(() => categories.value.filter((item) => (item.postCount ?? 0) > 0))
 
-const activeCategory = computed(() => visibleCategories.value.find((item) => item.slug === activeSlug.value) ?? null)
+// 非法 slug 统一回退到首个可用分类，避免总览页出现上方列表正常、下方入口缺失的半空态。
+const normalizedActiveSlug = computed(() => {
+  if (!visibleCategories.value.length) {
+    return ''
+  }
+
+  const matched = visibleCategories.value.find((item) => item.slug === activeSlug.value)
+  return matched?.slug ?? visibleCategories.value[0].slug
+})
+
+const activeCategory = computed(() => visibleCategories.value.find((item) => item.slug === normalizedActiveSlug.value) ?? null)
 
 async function loadCategories() {
   loading.value = true
@@ -29,12 +39,12 @@ async function loadCategories() {
     const response = await getPublicCategories()
     categories.value = response.list
 
-    // 若查询参数中的分类不存在，则自动回退到第一个可用分类。
-    if (!activeCategory.value && visibleCategories.value.length && !activeSlug.value) {
+    // 若查询参数缺失或非法，则统一回退到第一个可用分类。
+    if (visibleCategories.value.length && normalizedActiveSlug.value !== activeSlug.value) {
       await router.replace({
         name: 'public-categories',
         query: {
-          slug: visibleCategories.value[0].slug,
+          slug: normalizedActiveSlug.value,
         },
       })
     }
@@ -63,8 +73,8 @@ onMounted(() => {
 watch(
   () => route.query.slug,
   () => {
-    if (!activeSlug.value && visibleCategories.value.length) {
-      selectCategory(visibleCategories.value[0].slug)
+    if (visibleCategories.value.length && normalizedActiveSlug.value !== activeSlug.value) {
+      selectCategory(normalizedActiveSlug.value)
     }
   },
 )

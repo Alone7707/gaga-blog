@@ -16,7 +16,18 @@ const tags = ref<PublicTagSummary[]>([])
 // 标签总览页通过查询参数高亮当前选中标签，并提供详情页入口。
 const activeSlug = computed(() => String(route.query.slug ?? ''))
 const visibleTags = computed(() => tags.value.filter((item) => (item.postCount ?? 0) > 0))
-const activeTag = computed(() => visibleTags.value.find((item) => item.slug === activeSlug.value) ?? null)
+
+// 非法 slug 统一回退到首个可用标签，避免标签总览页出现高亮区缺失。
+const normalizedActiveSlug = computed(() => {
+  if (!visibleTags.value.length) {
+    return ''
+  }
+
+  const matched = visibleTags.value.find((item) => item.slug === activeSlug.value)
+  return matched?.slug ?? visibleTags.value[0].slug
+})
+
+const activeTag = computed(() => visibleTags.value.find((item) => item.slug === normalizedActiveSlug.value) ?? null)
 
 async function loadTags() {
   loading.value = true
@@ -26,11 +37,11 @@ async function loadTags() {
     const response = await getPublicTags()
     tags.value = response.list
 
-    if (!activeTag.value && visibleTags.value.length && !activeSlug.value) {
+    if (visibleTags.value.length && normalizedActiveSlug.value !== activeSlug.value) {
       await router.replace({
         name: 'public-tags',
         query: {
-          slug: visibleTags.value[0].slug,
+          slug: normalizedActiveSlug.value,
         },
       })
     }
@@ -59,8 +70,8 @@ onMounted(() => {
 watch(
   () => route.query.slug,
   () => {
-    if (!activeSlug.value && visibleTags.value.length) {
-      selectTag(visibleTags.value[0].slug)
+    if (visibleTags.value.length && normalizedActiveSlug.value !== activeSlug.value) {
+      selectTag(normalizedActiveSlug.value)
     }
   },
 )

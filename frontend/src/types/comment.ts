@@ -38,7 +38,7 @@ export interface AdminCommentItem {
   postId: string
   parentId: string | null
   authorName: string
-  authorEmail: string
+  authorEmail: string | null
   authorWebsite: string | null
   content: string
   status: AdminCommentStatus

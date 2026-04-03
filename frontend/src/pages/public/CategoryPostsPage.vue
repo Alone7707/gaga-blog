@@ -12,6 +12,7 @@ const route = useRoute()
 
 const loading = ref(false)
 const sidebarLoading = ref(false)
+const sidebarErrorMessage = ref('')
 const errorMessage = ref('')
 const posts = ref<PublicPostListItem[]>([])
 const categories = ref<PublicCategorySummary[]>([])
@@ -29,10 +30,15 @@ const siblingCategories = computed(() => categories.value.filter((item) => (item
 
 async function loadCategories() {
   sidebarLoading.value = true
+  sidebarErrorMessage.value = ''
 
   try {
     const response = await getPublicCategories()
     categories.value = response.list
+  }
+  catch (error) {
+    categories.value = []
+    sidebarErrorMessage.value = error instanceof Error ? error.message : '分类入口加载失败'
   }
   finally {
     sidebarLoading.value = false
@@ -99,6 +105,10 @@ watch(
     <SectionCard title="全部分类" description="左侧保留公开分类入口，便于用户快速切换浏览范围。">
       <div v-if="sidebarLoading" class="text-sm text-slate-300 leading-7">
         分类入口加载中...
+      </div>
+
+      <div v-else-if="sidebarErrorMessage" class="rounded-6 border border-rose-400/25 bg-rose-400/8 p-4 text-sm text-rose-100 leading-7">
+        {{ sidebarErrorMessage }}
       </div>
 
       <div v-else class="space-y-3">
