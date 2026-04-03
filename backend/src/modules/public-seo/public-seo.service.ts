@@ -4,13 +4,40 @@ import { PostStatus, PostVisibility } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SettingService } from '../setting/setting.service';
 
-interface SeoSiteContext {
+export interface SeoSiteContext {
   title: string;
   description: string;
   baseUrl: string;
   enableRss: boolean;
   enableSitemap: boolean;
   enableRobots: boolean;
+}
+
+export interface SeoManifestPostItem {
+  id: string;
+  title: string;
+  slug: string;
+  url: string;
+  summary: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  publishedAt: Date | null;
+  updatedAt: Date;
+}
+
+export interface SeoManifest {
+  site: SeoSiteContext;
+  endpoints: {
+    rss: string;
+    sitemap: string;
+    robots: string;
+  };
+  stats: {
+    latestPostCount: number;
+    publicCategoryCount: number;
+    publicTagCount: number;
+  };
+  latestPosts: SeoManifestPostItem[];
 }
 
 interface SitemapEntry {
@@ -50,7 +77,7 @@ export class PublicSeoService {
   }
 
   // 输出给前端直接消费的 SEO 清单，便于页面 head 或静态渲染层复用。
-  async getSeoManifest() {
+  async getSeoManifest(): Promise<SeoManifest> {
     const site = await this.getSeoSiteContext();
     const publicPostWhere = this.buildPublishedPostWhere();
     const [latestPosts, publicCategoryCount, publicTagCount] = await Promise.all([

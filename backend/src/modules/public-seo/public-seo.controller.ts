@@ -3,7 +3,7 @@ import { ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
 import { FastifyReply } from 'fastify';
 
 import { Public } from '../auth/decorators/public.decorator';
-import { PublicSeoService } from './public-seo.service';
+import { PublicSeoService, type SeoManifest } from './public-seo.service';
 
 @ApiTags('Public SEO')
 @Public()
@@ -13,7 +13,7 @@ export class PublicSeoController {
 
   @Get('public/seo/manifest')
   @ApiOperation({ summary: '获取公开 SEO 清单' })
-  async getManifest() {
+  async getManifest(): Promise<{ manifest: SeoManifest }> {
     return {
       manifest: await this.publicSeoService.getSeoManifest(),
     };
@@ -22,7 +22,7 @@ export class PublicSeoController {
   @Get('rss.xml')
   @ApiProduces('application/rss+xml')
   @ApiOperation({ summary: '获取 RSS 订阅 XML' })
-  async getRss(@Res() reply: FastifyReply) {
+  async getRss(@Res() reply: FastifyReply): Promise<FastifyReply> {
     const site = await this.publicSeoService.getSeoSiteContext();
 
     if (!site.enableRss) {
@@ -38,7 +38,7 @@ export class PublicSeoController {
   @Get('sitemap.xml')
   @ApiProduces('application/xml')
   @ApiOperation({ summary: '获取站点地图 XML' })
-  async getSitemap(@Res() reply: FastifyReply) {
+  async getSitemap(@Res() reply: FastifyReply): Promise<FastifyReply> {
     const site = await this.publicSeoService.getSeoSiteContext();
 
     if (!site.enableSitemap) {
@@ -54,7 +54,7 @@ export class PublicSeoController {
   @Get('robots.txt')
   @ApiProduces('text/plain')
   @ApiOperation({ summary: '获取 robots 文本' })
-  async getRobots(@Res() reply: FastifyReply) {
+  async getRobots(@Res() reply: FastifyReply): Promise<FastifyReply> {
     return reply
       .code(200)
       .type('text/plain; charset=UTF-8')

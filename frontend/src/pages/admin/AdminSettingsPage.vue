@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import { getAdminSettings, updateAdminSettings } from '../../api/settings'
@@ -30,6 +30,11 @@ interface SettingsFormState {
   contentSummaryLength: number
   contentRelatedPostsLimit: number
   contentArchivePageSize: number
+  staticAboutTitle: string
+  staticAboutSummary: string
+  staticAboutContent: string
+  staticAboutSeoTitle: string
+  staticAboutSeoDescription: string
 }
 
 const loading = ref(false)
@@ -63,6 +68,11 @@ const form = reactive<SettingsFormState>({
   contentSummaryLength: 140,
   contentRelatedPostsLimit: 6,
   contentArchivePageSize: 20,
+  staticAboutTitle: '',
+  staticAboutSummary: '',
+  staticAboutContent: '',
+  staticAboutSeoTitle: '',
+  staticAboutSeoDescription: '',
 })
 
 const groupSummary = computed(() => settingsResponse.value?.groups ?? [])
@@ -116,6 +126,11 @@ function fillForm(items: SettingItem[]) {
   form.contentSummaryLength = getNumberValue(items, 'content.summaryLength', 140)
   form.contentRelatedPostsLimit = getNumberValue(items, 'content.relatedPostsLimit', 6)
   form.contentArchivePageSize = getNumberValue(items, 'content.archivePageSize', 20)
+  form.staticAboutTitle = getStringValue(items, 'static.about.title')
+  form.staticAboutSummary = getStringValue(items, 'static.about.summary')
+  form.staticAboutContent = getStringValue(items, 'static.about.content')
+  form.staticAboutSeoTitle = getStringValue(items, 'static.about.seoTitle')
+  form.staticAboutSeoDescription = getStringValue(items, 'static.about.seoDescription')
 }
 
 function handleReset() {
@@ -192,6 +207,18 @@ function validateForm() {
     return '归档页分页大小必须大于 0'
   }
 
+  if (!form.staticAboutTitle.trim()) {
+    return '请输入关于页标题'
+  }
+
+  if (form.staticAboutSummary.trim().length > 300) {
+    return '关于页摘要不能超过 300 个字符'
+  }
+
+  if (form.staticAboutSeoDescription.trim().length > 300) {
+    return '关于页 SEO 描述不能超过 300 个字符'
+  }
+
   return ''
 }
 
@@ -222,6 +249,11 @@ function buildUpdateItems() {
     { key: 'content.summaryLength', value: form.contentSummaryLength },
     { key: 'content.relatedPostsLimit', value: form.contentRelatedPostsLimit },
     { key: 'content.archivePageSize', value: form.contentArchivePageSize },
+    { key: 'static.about.title', value: form.staticAboutTitle.trim() },
+    { key: 'static.about.summary', value: form.staticAboutSummary.trim() },
+    { key: 'static.about.content', value: form.staticAboutContent },
+    { key: 'static.about.seoTitle', value: form.staticAboutSeoTitle.trim() },
+    { key: 'static.about.seoDescription', value: form.staticAboutSeoDescription.trim() },
   ]
 }
 
@@ -255,6 +287,10 @@ function getGroupLabel(group: SettingGroup['group']) {
 
   if (group === 'content') {
     return '内容配置'
+  }
+
+  if (group === 'static') {
+    return '静态页面'
   }
 
   return group
@@ -291,7 +327,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 
 <template>
   <div class="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_380px]">
-    <SectionCard title="站点设置" description="当前接入后台站点设置读写接口，先满足站点基础信息、SEO、评论与内容策略的最小可交付能力。">
+    <SectionCard title="站点设置" description="当前接入后台站点设置读写接口，先满足站点基础信息、SEO、评论、内容策略与 about 静态页的最小闭环能力。">
       <div v-if="loading" class="rounded-6 border border-white/8 bg-slate-950/35 px-5 py-14 text-center text-sm text-slate-300">
         正在加载站点设置...
       </div>
@@ -428,6 +464,34 @@ function resolveErrorMessage(error: unknown, fallback: string) {
               <input v-model.number="form.contentArchivePageSize" type="number" min="1" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
             </label>
           </div>
+
+          <div class="space-y-4 rounded-6 border border-white/8 bg-slate-950/35 p-5 lg:col-span-2">
+            <h3 class="text-base text-white font-semibold">关于页配置</h3>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="block">
+                <span class="mb-2 block text-sm text-slate-300">关于页标题</span>
+                <input v-model="form.staticAboutTitle" type="text" maxlength="120" placeholder="例如：关于我们 / 关于我" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm text-slate-300">关于页摘要</span>
+                <input v-model="form.staticAboutSummary" type="text" maxlength="300" placeholder="用于 about 页首屏摘要" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+              </label>
+            </div>
+            <label class="block">
+              <span class="mb-2 block text-sm text-slate-300">关于页正文（Markdown）</span>
+              <textarea v-model="form.staticAboutContent" rows="10" placeholder="支持 Markdown 文本，保存后前台 /about 直接展示。" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70"></textarea>
+            </label>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="block">
+                <span class="mb-2 block text-sm text-slate-300">关于页 SEO 标题</span>
+                <input v-model="form.staticAboutSeoTitle" type="text" maxlength="120" placeholder="用于 about 页面 title" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm text-slate-300">关于页 SEO 描述</span>
+                <input v-model="form.staticAboutSeoDescription" type="text" maxlength="300" placeholder="用于 about 页面 SEO 描述" class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70">
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="flex flex-wrap gap-3">
@@ -465,6 +529,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
         <ul class="mt-3 space-y-2">
           <li>• 读取接口：GET /api/admin/settings</li>
           <li>• 保存接口：PATCH /api/admin/settings</li>
+          <li>• 新增闭环：保存 static.about.* 后，可在前台 /about 直接看到。</li>
           <li>• 若返回 403，说明当前账号不是超级管理员。</li>
           <li>• 当前页面不写任何敏感凭据，仅维护白名单站点配置。</li>
         </ul>

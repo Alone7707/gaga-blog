@@ -19,6 +19,7 @@ import ArchivesPage from '../pages/public/ArchivesPage.vue'
 import CategoriesPage from '../pages/public/CategoriesPage.vue'
 import CategoryPostsPage from '../pages/public/CategoryPostsPage.vue'
 import HomePage from '../pages/public/HomePage.vue'
+import AboutPage from '../pages/public/AboutPage.vue'
 import PostDetailPage from '../pages/public/PostDetailPage.vue'
 import SearchPage from '../pages/public/SearchPage.vue'
 import TagPostsPage from '../pages/public/TagPostsPage.vue'
@@ -49,6 +50,14 @@ const routes: RouteRecordRaw[] = [
         component: PostDetailPage,
         meta: {
           title: '文章详情',
+        },
+      },
+      {
+        path: 'about',
+        name: 'public-about',
+        component: AboutPage,
+        meta: {
+          title: '关于',
         },
       },
       {

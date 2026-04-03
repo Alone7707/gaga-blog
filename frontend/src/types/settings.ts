@@ -1,4 +1,4 @@
-﻿export type SettingGroupKey = 'site' | 'seo' | 'comment' | 'content'
+export type SettingGroupKey = 'site' | 'seo' | 'comment' | 'content' | 'static'
 
 export type SettingItemValue = string | number | boolean | string[] | null
 

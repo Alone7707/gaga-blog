@@ -3,9 +3,11 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { getPublicCategories, getPublicPosts, getPublicTags } from '../../api/public'
+import { getPublicSiteOverview } from '../../api/site'
 import SectionCard from '../../components/common/SectionCard.vue'
 import PostCard from '../../components/public/PostCard.vue'
 import type { PublicCategorySummary, PublicTagSummary } from '../../types/public'
+import type { PublicSiteOverview } from '../../types/site'
 import { toPostCardItem } from '../../utils/public-post'
 
 const loading = ref(false)
@@ -13,29 +15,37 @@ const errorMessage = ref('')
 const visiblePosts = ref<ReturnType<typeof toPostCardItem>[]>([])
 const categories = ref<PublicCategorySummary[]>([])
 const tags = ref<PublicTagSummary[]>([])
+const siteOverview = ref<PublicSiteOverview | null>(null)
 
 const heroPost = computed(() => visiblePosts.value[0] ?? null)
 const latestPosts = computed(() => visiblePosts.value.slice(1, 5))
 const highlightedCategories = computed(() => categories.value.slice(0, 4))
 const highlightedTags = computed(() => tags.value.slice(0, 12))
+const siteTitle = computed(() => siteOverview.value?.site.title?.trim() || '开源博客')
+const siteSubtitle = computed(() => siteOverview.value?.site.subtitle?.trim() || 'Fresh Editorial Cover')
+const siteDescription = computed(() => siteOverview.value?.site.description?.trim() || '首页回归年轻、简约、清爽的内容产品感：不靠厚重面板压气氛，而是靠信息结构、留白和阅读节奏把内容自然托起来。')
+const aboutSummary = computed(() => siteOverview.value?.static['about.summary']?.trim() || '关于页已接入公开站点设置，可直接承接品牌介绍、作者介绍与站点说明。')
 
-// 首页聚合公开文章、分类和标签入口，首轮只服务首页主叙事与阅读动线。
+// 首页聚合公开文章、分类、标签与站点概览，优先打通站点设置消费闭环。
 async function loadHomeData() {
   loading.value = true
   errorMessage.value = ''
 
   try {
-    const [postResponse, categoryResponse, tagResponse] = await Promise.all([
+    const [postResponse, categoryResponse, tagResponse, overviewResponse] = await Promise.all([
       getPublicPosts({ page: 1, pageSize: 6 }),
       getPublicCategories(),
       getPublicTags(),
+      getPublicSiteOverview(),
     ])
 
     visiblePosts.value = postResponse.list.map((item) => toPostCardItem(item))
     categories.value = categoryResponse.list.filter((item) => (item.postCount ?? 0) > 0)
     tags.value = tagResponse.list.filter((item) => (item.postCount ?? 0) > 0)
+    siteOverview.value = overviewResponse
   }
   catch (error) {
+    siteOverview.value = null
     errorMessage.value = error instanceof Error ? error.message : '首页数据加载失败'
   }
   finally {
@@ -44,7 +54,7 @@ async function loadHomeData() {
 }
 
 onMounted(() => {
-  loadHomeData()
+  void loadHomeData()
 })
 </script>
 
@@ -54,12 +64,12 @@ onMounted(() => {
       <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_400px] xl:items-stretch">
         <div class="flex flex-col justify-between gap-8">
           <div>
-            <p class="editor-kicker">首页 / Fresh Editorial Cover</p>
+            <p class="editor-kicker">首页 / {{ siteSubtitle }}</p>
             <h2 class="editor-title mt-4 max-w-4xl text-[38px] leading-[1.08] md:text-[52px]">
-              先把值得读的内容推到前面，再把主题路径放在顺手的位置。
+              {{ siteTitle }}
             </h2>
             <p class="mt-5 max-w-3xl text-sm text-[var(--text-3)] leading-7 md:text-[16px]">
-              首页回归年轻、简约、清爽的内容产品感：不靠厚重面板压气氛，而是靠信息结构、留白和阅读节奏把内容自然托起来。
+              {{ siteDescription }}
             </p>
           </div>
 
@@ -67,7 +77,7 @@ onMounted(() => {
             <div class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
               <p class="editor-kicker">公开文章</p>
               <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
-                {{ visiblePosts.length }}
+                {{ siteOverview?.stats.publishedPostCount ?? visiblePosts.length }}
               </p>
               <p class="mt-2 text-sm text-[var(--text-3)] leading-6">
                 首屏只放真实内容，不再堆无效装饰块。
@@ -83,12 +93,12 @@ onMounted(() => {
               </p>
             </div>
             <div class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5">
-              <p class="editor-kicker">标签话题</p>
+              <p class="editor-kicker">已审评论</p>
               <p class="mt-4 text-[34px] text-[var(--text-1)] font-semibold">
-                {{ tags.length }}
+                {{ siteOverview?.stats.approvedCommentCount ?? 0 }}
               </p>
               <p class="mt-2 text-sm text-[var(--text-3)] leading-6">
-                标签负责横向串联内容网络。
+                评论数据已纳入公开站点概览接口。
               </p>
             </div>
           </div>
@@ -99,6 +109,9 @@ onMounted(() => {
             </RouterLink>
             <RouterLink to="/archives" class="ui-btn ui-btn-secondary text-sm">
               进入归档
+            </RouterLink>
+            <RouterLink to="/about" class="ui-btn ui-btn-secondary text-sm">
+              查看关于页
             </RouterLink>
           </div>
         </div>
@@ -220,5 +233,27 @@ onMounted(() => {
         </div>
       </SectionCard>
     </div>
+
+    <SectionCard
+      title="关于页入口"
+      description="前台 about 已接入公开站点设置与静态页接口，先完成设置保存到前台可见的最小闭环。"
+      variant="dashed"
+    >
+      <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-center">
+        <div>
+          <p class="text-sm text-[var(--text-3)] leading-7">
+            {{ aboutSummary }}
+          </p>
+          <p class="mt-3 text-xs text-[var(--text-4)]">
+            支持后台维护：static.about.title / summary / content / seoTitle / seoDescription
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3 xl:justify-end">
+          <RouterLink to="/about" class="ui-btn ui-btn-primary text-sm">
+            打开关于页
+          </RouterLink>
+        </div>
+      </div>
+    </SectionCard>
   </div>
 </template>

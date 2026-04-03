@@ -3,6 +3,7 @@ import type { NavigationItem } from '../types/navigation'
 // 前台主导航只保留核心入口，避免首轮改版继续扩散页面范围。
 export const publicNavigation: NavigationItem[] = [
   { label: '首页', to: '/' },
+  { label: '关于', to: '/about' },
   { label: '分类', to: '/categories' },
   { label: '标签', to: '/tags' },
   { label: '搜索', to: '/search' },
