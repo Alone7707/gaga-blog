@@ -148,7 +148,7 @@ watch(
             >
               <div class="flex items-center justify-between gap-3">
                 <span>{{ category.name }}</span>
-                <span class="text-xs text-[var(--text-4)]">{{ category.postCount ?? 0 }}</span>
+                <span class="text-xs text-[var(--text-3)]">{{ category.postCount ?? 0 }}</span>
               </div>
             </RouterLink>
           </div>
@@ -164,7 +164,7 @@ watch(
             >
               <div class="flex items-center justify-between gap-3">
                 <span class="text-sm font-medium text-[var(--text-1)]">{{ category.name }}</span>
-                <span class="text-xs text-[var(--text-4)]">{{ category.postCount ?? 0 }} 篇</span>
+                <span class="text-xs text-[var(--text-3)]">{{ category.postCount ?? 0 }} 篇</span>
               </div>
             </RouterLink>
           </div>

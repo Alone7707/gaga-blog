@@ -276,12 +276,12 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                         {{ getPostStatusLabel(post.status) }}
                       </span>
                     </div>
-                    <p class="mt-3 text-xs text-[var(--text-4)] leading-6">
+                    <p class="mt-3 text-xs text-[var(--text-3)] leading-6">
                       分类：{{ post.category?.name || '未分类' }} · 作者：{{ post.author.displayName }}
                     </p>
                   </div>
                 </div>
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-4)]">
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-3)]">
                   <span class="editor-mono">更新时间：{{ formatDateTime(post.updatedAt) }}</span>
                   <span>评论数：{{ post.commentCount }}</span>
                 </div>

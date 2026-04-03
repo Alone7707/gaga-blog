@@ -113,7 +113,7 @@ onMounted(() => {
         <RouterView />
       </main>
 
-      <footer class="mt-10 flex flex-col gap-3 border-t border-[var(--line-soft)] px-1 pt-6 text-sm text-[var(--text-4)] md:flex-row md:items-center md:justify-between">
+      <footer class="mt-10 flex flex-col gap-3 border-t border-[var(--line-soft)] px-1 pt-6 text-sm text-[var(--text-3)] md:flex-row md:items-center md:justify-between">
         <p>
           {{ siteFooterText }}
           <span v-if="siteIcp"> · {{ siteIcp }}</span>

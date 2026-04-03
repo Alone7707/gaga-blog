@@ -25,10 +25,10 @@ const isFeatured = computed(() => Boolean(props.featured || props.post.featured)
       <div>
         <div class="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[var(--accent-primary)]">
           <span>{{ post.category }}</span>
-          <span class="text-[var(--text-4)]">•</span>
-          <span class="editor-mono text-[var(--text-4)]">{{ post.publishedAt }}</span>
-          <span class="text-[var(--text-4)]">•</span>
-          <span class="text-[var(--text-4)]">{{ post.readingTime }}</span>
+          <span class="text-[var(--text-3)]">•</span>
+          <span class="editor-mono text-[var(--text-3)]">{{ post.publishedAt }}</span>
+          <span class="text-[var(--text-3)]">•</span>
+          <span class="text-[var(--text-3)]">{{ post.readingTime }}</span>
         </div>
 
         <h3 class="mt-4 text-[22px] text-[var(--text-1)] font-semibold leading-[1.35] tracking-[-0.03em] md:text-[28px]" :class="isFeatured ? 'md:text-[34px]' : ''">

@@ -224,7 +224,7 @@ watch(
               <RouterLink
                 v-if="currentPost.category"
                 :to="`/categories/${currentPost.category.slug}`"
-                class="ui-badge border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]"
+                class="ui-badge border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary-strong)]"
               >
                 {{ currentPost.category.name }}
               </RouterLink>

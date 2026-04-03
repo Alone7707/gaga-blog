@@ -492,7 +492,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
           :key="item.label"
           class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5"
         >
-          <p class="text-sm text-[var(--text-4)]">{{ item.label }}</p>
+          <p class="text-sm text-[var(--text-3)]">{{ item.label }}</p>
           <p class="mt-4 text-[34px] font-semibold text-[var(--text-1)]">{{ statsLoading ? '--' : item.value }}</p>
           <p class="mt-3 text-sm text-[var(--text-3)] leading-6">{{ item.hint }}</p>
         </div>
@@ -595,7 +595,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2 text-sm font-medium text-[var(--text-1)]">
                     <span>{{ comment.authorName }}</span>
-                    <span class="text-xs text-[var(--text-4)]">{{ maskEmail(comment.authorEmail) }}</span>
+                    <span class="text-xs text-[var(--text-3)]">{{ maskEmail(comment.authorEmail) }}</span>
                   </div>
                   <p class="mt-3 line-clamp-3 text-sm text-[var(--text-3)] leading-7">
                     {{ comment.content }}
@@ -606,7 +606,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                 </span>
               </div>
 
-              <div class="mt-4 grid gap-3 text-xs text-[var(--text-4)] md:grid-cols-2">
+              <div class="mt-4 grid gap-3 text-xs text-[var(--text-3)] md:grid-cols-2">
                 <p>所属文章：{{ comment.post.title }}</p>
                 <p>提交时间：{{ formatDateTime(comment.createdAt) }}</p>
                 <p>回复概览：{{ comment.approvedReplyCount }} / {{ comment.replyCount }}</p>
@@ -713,7 +713,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
 
           <div v-if="selectedCommentDetail.parent" class="rounded-[22px] border border-dashed border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-4">
             <p class="text-sm font-medium text-[var(--text-1)]">父评论</p>
-            <p class="mt-2 text-xs text-[var(--text-4)]">{{ selectedCommentDetail.parent.authorName }}</p>
+            <p class="mt-2 text-xs text-[var(--text-3)]">{{ selectedCommentDetail.parent.authorName }}</p>
             <p class="mt-3 text-sm text-[var(--text-3)] leading-7">{{ selectedCommentDetail.parent.content }}</p>
           </div>
 
@@ -765,7 +765,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
           <div class="rounded-[22px] border border-[var(--line-soft)] bg-white p-4">
             <div class="flex items-center justify-between gap-3">
               <p class="text-sm font-medium text-[var(--text-1)]">已通过回复</p>
-              <span class="text-xs text-[var(--text-4)]">{{ selectedCommentDetail.replies.length }} 条</span>
+              <span class="text-xs text-[var(--text-3)]">{{ selectedCommentDetail.replies.length }} 条</span>
             </div>
             <div v-if="selectedCommentDetail.replies.length === 0" class="mt-3 text-sm text-[var(--text-3)]">
               当前暂无回复。
@@ -783,7 +783,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
                   </span>
                 </div>
                 <p class="mt-3 text-sm text-[var(--text-3)] leading-6">{{ reply.content }}</p>
-                <p class="mt-3 text-xs text-[var(--text-4)]">{{ formatDateTime(reply.createdAt) }}</p>
+                <p class="mt-3 text-xs text-[var(--text-3)]">{{ formatDateTime(reply.createdAt) }}</p>
               </article>
             </div>
           </div>

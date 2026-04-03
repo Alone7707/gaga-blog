@@ -9,10 +9,12 @@
   --line-focus: rgba(76, 139, 245, 0.22);
   --text-1: #172033;
   --text-2: #243247;
-  --text-3: #4a5b72;
-  --text-4: #6f8097;
+  --text-3: #465974;
+  --text-4: #5f738f;
+  --text-5: #52657f;
   --accent-primary: #4c8bf5;
   --accent-primary-hover: #3f7de4;
+  --accent-primary-strong: #235fc4;
   --accent-primary-soft: #eaf2ff;
   --accent-mint: #54c6a9;
   --accent-sky: #7bc7ff;
@@ -232,7 +234,7 @@ img {
 
 .ui-input::placeholder,
 .ui-textarea::placeholder {
-  color: #7a8aa0;
+  color: var(--text-4);
 }
 
 .ui-input:focus,
@@ -259,7 +261,7 @@ img {
 }
 
 .ui-badge-status-draft {
-  color: #44556c;
+  color: var(--text-3);
   border-color: #d4ddea;
   background: #f3f6fa;
 }
@@ -267,7 +269,7 @@ img {
 .ui-badge-status-published,
 .ui-badge-status-approved,
 .ui-badge-status-success {
-  color: #0e8a55;
+  color: #0f8a56;
   border-color: rgba(18, 183, 106, 0.22);
   background: #e7f8ef;
 }

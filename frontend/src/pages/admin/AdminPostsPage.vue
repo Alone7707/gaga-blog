@@ -336,11 +336,11 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
                   {{ getStatusLabel(post.status) }}
                 </span>
               </div>
-              <p class="mt-2 text-xs text-[var(--text-4)] editor-mono">/{{ post.slug }}</p>
+              <p class="mt-2 text-xs text-[var(--text-3)] editor-mono">/{{ post.slug }}</p>
               <p class="mt-3 line-clamp-2 text-sm text-[var(--text-3)] leading-7">
                 {{ post.summary || '暂无摘要，后续可在编辑页补充。' }}
               </p>
-              <div class="mt-4 flex flex-wrap gap-2 text-xs text-[var(--text-4)]">
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-[var(--text-3)]">
                 <span class="ui-badge">分类：{{ post.category?.name || '未分类' }}</span>
                 <span class="ui-badge">标签 {{ post.counts?.tags ?? 0 }}</span>
                 <span class="ui-badge">评论 {{ post.counts?.comments ?? 0 }}</span>
@@ -348,12 +348,12 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
             </div>
 
             <div class="text-sm text-[var(--text-3)] leading-7">
-              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-4)]">更新时间</p>
+              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-3)]">更新时间</p>
               <p class="mt-2 editor-mono">{{ formatDateTime(post.updatedAt ?? null) }}</p>
             </div>
 
             <div class="text-sm text-[var(--text-3)] leading-7">
-              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-4)]">发布时间</p>
+              <p class="text-xs uppercase tracking-[0.16em] text-[var(--text-3)]">发布时间</p>
               <p class="mt-2 editor-mono">{{ formatDateTime(post.publishedAt ?? null) }}</p>
             </div>
 
@@ -378,7 +378,7 @@ function resolveErrorMessage(error: unknown, fallback = '文章列表加载失�
         </article>
       </div>
 
-      <div class="mt-5 flex flex-col gap-3 border-t border-[var(--line-soft)] pt-5 text-sm text-[var(--text-4)] md:flex-row md:items-center md:justify-between">
+      <div class="mt-5 flex flex-col gap-3 border-t border-[var(--line-soft)] pt-5 text-sm text-[var(--text-3)] md:flex-row md:items-center md:justify-between">
         <p>第 {{ pagination.page }} / {{ Math.max(pagination.totalPages, 1) }} 页</p>
         <div class="flex items-center gap-3">
           <button

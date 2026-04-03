@@ -21,10 +21,16 @@ const currentSection = computed(() => {
   return matched?.label ?? '内容后台'
 })
 
-// 后台导航高亮需要避开 /admin 对所有子路由误判的问题。
+// 后台导航高亮需要避开 /admin 对所有子路由误判，同时兼容新建页归属到文章管理。
 function isNavActive(target: string) {
   if (target === '/admin') {
     return route.path === '/admin'
+  }
+
+  if (target === '/admin/posts') {
+    return route.path === '/admin/posts'
+      || route.path === '/admin/posts/new'
+      || route.path.startsWith('/admin/posts/')
   }
 
   return route.path === target || route.path.startsWith(`${target}/`)

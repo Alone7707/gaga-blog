@@ -70,7 +70,7 @@ defineProps<{
             :key="item.label"
             class="rounded-[20px] border border-[var(--line-soft)] bg-white p-4"
           >
-            <p class="text-xs text-[var(--text-4)]">{{ item.label }}</p>
+            <p class="text-xs text-[var(--text-3)]">{{ item.label }}</p>
             <p class="mt-2 text-[28px] font-semibold text-[var(--text-1)]">{{ item.value }}</p>
           </div>
         </div>
