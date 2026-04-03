@@ -205,6 +205,46 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     valueType: 'number',
     defaultValue: 20,
   },
+  {
+    key: 'static.about.title',
+    group: 'static',
+    description: '关于页标题',
+    isPublic: true,
+    valueType: 'string',
+    defaultValue: '关于我',
+  },
+  {
+    key: 'static.about.summary',
+    group: 'static',
+    description: '关于页摘要',
+    isPublic: true,
+    valueType: 'string',
+    defaultValue: '',
+  },
+  {
+    key: 'static.about.content',
+    group: 'static',
+    description: '关于页正文内容，建议保存 Markdown 文本',
+    isPublic: true,
+    valueType: 'string',
+    defaultValue: '',
+  },
+  {
+    key: 'static.about.seoTitle',
+    group: 'static',
+    description: '关于页 SEO 标题',
+    isPublic: true,
+    valueType: 'string',
+    defaultValue: '',
+  },
+  {
+    key: 'static.about.seoDescription',
+    group: 'static',
+    description: '关于页 SEO 描述',
+    isPublic: true,
+    valueType: 'string',
+    defaultValue: '',
+  },
 ];
 
 export const SETTING_DEFINITION_MAP = new Map(

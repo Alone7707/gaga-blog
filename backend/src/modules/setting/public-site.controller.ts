@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Public } from '../auth/decorators/public.decorator';
@@ -21,6 +21,14 @@ export class PublicSiteController {
   async getSiteOverview() {
     return {
       overview: await this.settingService.getPublicSiteOverview(),
+    };
+  }
+
+  @Get('pages/:slug')
+  @ApiOperation({ summary: '获取公开静态页内容，当前最小支持 about 页' })
+  async getStaticPage(@Param('slug') slug: string) {
+    return {
+      page: await this.settingService.getPublicStaticPage(slug),
     };
   }
 }

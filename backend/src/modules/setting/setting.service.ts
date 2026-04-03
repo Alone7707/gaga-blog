@@ -28,6 +28,16 @@ interface SettingRecordLike {
   updatedAt: Date;
 }
 
+interface PublicSettingGroupItem {
+  key: string;
+  value: unknown;
+}
+
+interface PublicSettingGroupPayload {
+  group: string;
+  items: PublicSettingGroupItem[];
+}
+
 @Injectable()
 export class SettingService {
   constructor(private readonly prismaService: PrismaService) {}
@@ -133,6 +143,62 @@ export class SettingService {
     };
   }
 
+  // 关于页与后续静态页先复用 setting 存储，降低 MVP 交付成本。
+  async getPublicStaticPage(pageSlug: string) {
+    const normalizedPageSlug = pageSlug.trim().toLowerCase();
+
+    if (normalizedPageSlug !== 'about') {
+      throw new NotFoundException({
+        code: 'STATIC_PAGE_NOT_FOUND',
+        message: '静态页面不存在',
+      });
+    }
+
+    const [groups, latestUpdatedRecord] = await Promise.all([
+      this.getPublicSettingGroups(),
+      this.prismaService.setting.findFirst({
+        where: {
+          key: {
+            in: [
+              'static.about.title',
+              'static.about.summary',
+              'static.about.content',
+              'static.about.seoTitle',
+              'static.about.seoDescription',
+            ],
+          },
+          isPublic: true,
+        },
+        orderBy: [{ updatedAt: 'desc' }],
+        select: {
+          updatedAt: true,
+        },
+      }),
+    ]);
+
+    const values = this.toPublicSettingValues(groups);
+    const staticSettings = values.static ?? {};
+    const siteSettings = values.site ?? {};
+    const seoSettings = values.seo ?? {};
+
+    return {
+      slug: 'about',
+      title: this.toOptionalString(staticSettings['about.title']) || '关于我',
+      summary: this.toOptionalString(staticSettings['about.summary']),
+      content: this.toOptionalString(staticSettings['about.content']),
+      seoTitle:
+        this.toOptionalString(staticSettings['about.seoTitle']) ||
+        this.toOptionalString(seoSettings.defaultTitle) ||
+        this.toOptionalString(siteSettings.title) ||
+        '关于我',
+      seoDescription:
+        this.toOptionalString(staticSettings['about.seoDescription']) ||
+        this.toOptionalString(siteSettings.description) ||
+        null,
+      updatedAt: latestUpdatedRecord?.updatedAt.toISOString() ?? null,
+    };
+  }
+
   // 站点概览额外补齐文章与评论公开统计，供前台首页或页脚直接消费。
   async getPublicSiteOverview() {
     const [groups, publishedPostCount, approvedCommentCount, latestPublishedPost] = await Promise.all([
@@ -189,6 +255,7 @@ export class SettingService {
       seo: values.seo ?? {},
       comment: values.comment ?? {},
       content: values.content ?? {},
+      static: values.static ?? {},
       stats: {
         publishedPostCount,
         approvedCommentCount,
@@ -215,10 +282,12 @@ export class SettingService {
     );
   }
 
-  private toPublicSettingValues(groups: Array<{ group: string; items: Array<{ key: string; value: unknown }> }>) {
+  private toPublicSettingValues(groups: PublicSettingGroupPayload[]) {
     return groups.reduce<Record<string, Record<string, unknown>>>((accumulator, group) => {
       accumulator[group.group] = group.items.reduce<Record<string, unknown>>((groupAccumulator, item) => {
-        const [, field] = item.key.split('.');
+        const [, ...restFields] = item.key.split('.');
+        const field = restFields.join('.');
+
         groupAccumulator[field] = item.value;
         return groupAccumulator;
       }, {});
@@ -267,6 +336,15 @@ export class SettingService {
       createdAt: persisted?.createdAt ?? null,
       updatedAt: persisted?.updatedAt ?? null,
     };
+  }
+
+  private toOptionalString(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const normalizedValue = value.trim();
+    return normalizedValue.length > 0 ? normalizedValue : null;
   }
 
   private ensureSuperAdmin(currentUser: AuthenticatedUser): void {
