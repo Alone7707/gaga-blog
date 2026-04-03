@@ -174,6 +174,12 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             新建文章
           </RouterLink>
           <RouterLink
+            to="/admin/comments"
+            class="inline-flex items-center rounded-full border border-white/12 px-4 py-2 text-sm text-slate-100 transition hover:border-cyan-300/30 hover:text-white"
+          >
+            去审核评论
+          </RouterLink>
+          <RouterLink
             to="/admin/settings"
             class="inline-flex items-center rounded-full border border-white/12 px-4 py-2 text-sm text-slate-100 transition hover:border-cyan-300/30 hover:text-white"
           >
@@ -258,6 +264,15 @@ function resolveErrorMessage(error: unknown, fallback: string) {
           </SectionCard>
 
           <SectionCard title="最近评论" description="帮助管理员确认待审核评论与最近互动情况。">
+            <template #action>
+              <RouterLink
+                to="/admin/comments"
+                class="inline-flex items-center rounded-full border border-white/12 px-3 py-1.5 text-xs text-slate-100 transition hover:border-cyan-300/30 hover:text-white"
+              >
+                打开审核页
+              </RouterLink>
+            </template>
+
             <div v-if="recentComments.length === 0" class="rounded-6 border border-white/8 bg-slate-950/30 px-5 py-12 text-center text-sm text-slate-300">
               暂无最近评论数据。
             </div>

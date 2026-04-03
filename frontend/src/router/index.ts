@@ -8,6 +8,7 @@
 import AdminLayout from '../layouts/AdminLayout.vue'
 import PublicLayout from '../layouts/PublicLayout.vue'
 import AdminCategoriesPage from '../pages/admin/AdminCategoriesPage.vue'
+import AdminCommentsPage from '../pages/admin/AdminCommentsPage.vue'
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.vue'
 import AdminLoginPage from '../pages/admin/AdminLoginPage.vue'
 import AdminPostEditorPage from '../pages/admin/AdminPostEditorPage.vue'
@@ -170,6 +171,15 @@ const routes: RouteRecordRaw[] = [
         component: AdminTagsPage,
         meta: {
           title: '标签管理',
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'comments',
+        name: 'admin-comments',
+        component: AdminCommentsPage,
+        meta: {
+          title: '评论审核',
           requiresAuth: true,
         },
       },

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import { adminNavigation } from '../constants/navigation'
@@ -27,7 +27,7 @@ async function handleLogout() {
             内容后台
           </h2>
           <p class="mt-3 text-sm text-slate-400 leading-6">
-            当前已接入基础登录态。文章管理模块已落地最小可用版本，后续页面可以继续沿这套壳层扩展。
+            当前后台已接入仪表盘、文章、分类、标签、评论审核与站点设置的基础能力，后续模块可继续沿这套壳层扩展。
           </p>
         </div>
 
@@ -70,6 +70,12 @@ async function handleLogout() {
               class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300"
             >
               新建文章
+            </RouterLink>
+            <RouterLink
+              to="/admin/comments"
+              class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-100 transition hover:border-cyan-300/30 hover:text-white"
+            >
+              去审评论
             </RouterLink>
             <span class="rounded-full border border-cyan-300/30 px-4 py-2 text-sm text-cyan-200">
               {{ authStore.profile?.displayName ?? '站点管理员' }}
