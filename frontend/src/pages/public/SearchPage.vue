@@ -184,7 +184,7 @@ watch(
                 v-for="item in quickSuggestions"
                 :key="item"
                 type="button"
-                class="ui-badge cursor-pointer bg-white transition hover:border-[rgba(76,139,245,0.22)] hover:text-[var(--text-1)]"
+                class="ui-badge cursor-pointer bg-[var(--bg-card)] transition hover:border-[var(--line-accent-soft-hover)] hover:text-[var(--text-1)]"
                 @click="applySuggestion(item)"
               >
                 {{ item }}
@@ -196,7 +196,7 @@ watch(
 
       <SectionCard title="搜索侧栏" description="给出用途说明与浏览分流。" variant="dashed">
         <div class="space-y-4">
-          <div class="rounded-[20px] border border-[var(--line-soft)] bg-white p-4">
+          <div class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-4">
             <p class="text-sm text-[var(--text-2)] leading-7">
               搜索适合明确主题词的场景；如果你更想按主题慢慢逛，可以直接走分类、标签或归档。
             </p>

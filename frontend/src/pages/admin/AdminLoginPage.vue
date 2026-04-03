@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import ThemeToggle from '../../components/common/ThemeToggle.vue'
 import { useAuthStore } from '../../stores/auth'
 
 const route = useRoute()
@@ -66,6 +67,10 @@ function resolveErrorMessage(error: unknown) {
 
 <template>
   <div class="app-shell min-h-screen bg-[var(--bg-page)] px-4 py-6 text-[var(--text-2)] md:px-6 md:py-8">
+    <div class="mx-auto mb-4 flex max-w-[1240px] justify-end">
+      <ThemeToggle />
+    </div>
+
     <div class="mx-auto grid min-h-[calc(100vh-3rem)] max-w-[1240px] gap-6 xl:grid-cols-[minmax(0,1.08fr)_440px]">
       <section class="panel-surface hidden rounded-[32px] p-8 xl:flex xl:flex-col xl:justify-between">
         <div>
@@ -79,17 +84,17 @@ function resolveErrorMessage(error: unknown) {
         </div>
 
         <div class="grid gap-4 md:grid-cols-3">
-          <article class="rounded-[24px] border border-[rgba(76,139,245,0.16)] bg-[linear-gradient(180deg,#f8fbff,#ffffff)] p-5">
+          <article class="rounded-[24px] border border-[var(--line-accent-soft)] bg-[var(--bg-gradient-card-info)] p-5">
             <p class="text-sm text-[var(--text-4)]">登录方式</p>
             <p class="mt-3 text-[28px] font-semibold text-[var(--text-1)]">账号密码</p>
             <p class="mt-3 text-sm text-[var(--text-3)] leading-7">沿用后台鉴权接口，优先保证登录闭环可用。</p>
           </article>
-          <article class="rounded-[24px] border border-[var(--line-soft)] bg-white p-5">
+          <article class="rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-5">
             <p class="text-sm text-[var(--text-4)]">状态恢复</p>
             <p class="mt-3 text-[28px] font-semibold text-[var(--text-1)]">自动恢复</p>
             <p class="mt-3 text-sm text-[var(--text-3)] leading-7">刷新页面后通过当前用户接口恢复登录状态。</p>
           </article>
-          <article class="rounded-[24px] border border-[rgba(18,183,106,0.14)] bg-[linear-gradient(180deg,#f4fdf8,#ffffff)] p-5">
+          <article class="rounded-[24px] border border-[var(--line-success-panel)] bg-[var(--bg-gradient-card-success)] p-5">
             <p class="text-sm text-[var(--text-4)]">进入后</p>
             <p class="mt-3 text-[28px] font-semibold text-[var(--text-1)]">直达后台</p>
             <p class="mt-3 text-sm text-[var(--text-3)] leading-7">优先进入仪表盘，再处理文章、评论与设置。</p>
@@ -99,7 +104,7 @@ function resolveErrorMessage(error: unknown) {
 
       <section class="panel-surface flex rounded-[32px] p-6 md:p-8 xl:p-9">
         <div class="m-auto w-full max-w-[360px]">
-          <div class="rounded-[24px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f8fbff)] p-5">
+          <div class="rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-gradient-card-hero)] p-5">
             <p class="editor-kicker">欢迎回来</p>
             <h2 class="mt-3 text-[30px] font-semibold text-[var(--text-1)] leading-tight">
               博客后台登录
@@ -134,7 +139,7 @@ function resolveErrorMessage(error: unknown) {
 
             <p
               v-if="errorMessage"
-              class="rounded-[18px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
+              class="rounded-[18px] border border-[var(--line-danger-panel)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
             >
               {{ errorMessage }}
             </p>

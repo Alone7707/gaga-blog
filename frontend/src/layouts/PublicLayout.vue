@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import { getPublicSiteOverview } from '../api/site'
+import ThemeToggle from '../components/common/ThemeToggle.vue'
 import { publicNavigation } from '../constants/navigation'
 import type { PublicSiteOverview } from '../types/site'
 
@@ -85,7 +86,10 @@ onMounted(() => {
             </p>
           </div>
 
-          <div class="flex w-full max-w-[460px] flex-col gap-4 xl:items-end">
+          <div class="flex w-full max-w-[520px] flex-col gap-4 xl:items-end">
+            <div class="flex items-center gap-3 xl:justify-end">
+              <ThemeToggle />
+            </div>
             <nav class="flex flex-wrap gap-2 xl:justify-end">
               <RouterLink
                 v-for="item in publicNavigation"

@@ -122,7 +122,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="rounded-[28px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] p-6">
+        <div class="rounded-[28px] border border-[var(--line-soft)] bg-[var(--bg-home-hero-side)] p-6">
           <div class="flex items-center justify-between gap-3">
             <p class="editor-kicker">精选主推</p>
             <span class="ui-badge">本周优先阅读</span>
@@ -168,7 +168,7 @@ onMounted(() => {
         正在加载公开文章...
       </div>
 
-      <div v-else-if="errorMessage" class="rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
+      <div v-else-if="errorMessage" class="rounded-[20px] border border-[var(--line-danger-panel)] bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)] leading-7">
         {{ errorMessage }}
       </div>
 
@@ -195,7 +195,7 @@ onMounted(() => {
             v-for="category in highlightedCategories"
             :key="category.id"
             :to="`/categories/${category.slug}`"
-            class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 transition hover:border-[rgba(76,139,245,0.22)] hover:bg-white"
+            class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card-soft)] p-5 transition hover:border-[var(--line-accent-soft-hover)] hover:bg-[var(--bg-card)]"
           >
             <p class="editor-kicker">分类导航</p>
             <h3 class="mt-4 text-[22px] text-[var(--text-1)] font-semibold leading-tight">
@@ -223,8 +223,8 @@ onMounted(() => {
             :to="`/tags/${tag.slug}`"
             class="inline-flex items-center rounded-full border px-3 py-2 text-xs transition"
             :class="(tag.postCount ?? 0) >= 5
-              ? 'border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]'
-              : 'border-[var(--line-soft)] bg-white text-[var(--text-3)] hover:border-[rgba(76,139,245,0.18)] hover:text-[var(--text-1)]'"
+              ? 'border-[var(--line-accent-soft)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary-strong)]'
+              : 'border-[var(--line-soft)] bg-[var(--bg-card)] text-[var(--text-3)] hover:border-[var(--line-accent-soft)] hover:text-[var(--text-1)]'"
           >
             # {{ tag.name }}
           </RouterLink>

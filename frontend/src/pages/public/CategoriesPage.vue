@@ -121,8 +121,8 @@ watch(
             type="button"
             class="rounded-[24px] border p-5 text-left transition hover:-translate-y-[2px]"
             :class="category.slug === normalizedActiveSlug
-              ? 'border-[rgba(76,139,245,0.22)] bg-[linear-gradient(180deg,#f3f8ff,#ffffff)] shadow-[var(--shadow-sm)]'
-              : 'border-[var(--line-soft)] bg-white hover:border-[rgba(76,139,245,0.22)] hover:shadow-[var(--shadow-sm)]'"
+              ? 'border-[var(--line-accent-soft-hover)] bg-[var(--bg-gradient-card-info)] shadow-[var(--shadow-sm)]'
+              : 'border-[var(--line-soft)] bg-[var(--bg-card)] hover:border-[var(--line-accent-soft-hover)] hover:shadow-[var(--shadow-sm)]'"
             @click="selectCategory(category.slug)"
           >
             <div class="flex items-start justify-between gap-3">
@@ -132,7 +132,7 @@ watch(
                   {{ category.name }}
                 </h3>
               </div>
-              <span class="ui-badge bg-white">{{ category.postCount ?? 0 }} 篇</span>
+              <span class="ui-badge bg-[var(--bg-card)]">{{ category.postCount ?? 0 }} 篇</span>
             </div>
             <p class="mt-4 text-sm text-[var(--text-3)] leading-7">
               {{ category.description || '当前分类暂无补充说明，点击后可直接进入对应文章列表。' }}
@@ -150,7 +150,7 @@ watch(
       </SectionCard>
 
       <SectionCard title="浏览建议" description="右侧只保留当前焦点和高频分类，避免信息过载。" variant="dashed">
-        <div v-if="activeCategory" class="rounded-[22px] border border-[var(--line-soft)] bg-white p-5">
+        <div v-if="activeCategory" class="rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-5">
           <p class="editor-kicker">当前焦点</p>
           <h3 class="mt-3 text-[22px] text-[var(--text-1)] font-semibold tracking-[-0.03em]">
             {{ activeCategory.name }}
@@ -171,7 +171,7 @@ watch(
             v-for="category in topCategories"
             :key="category.id"
             :to="`/categories/${category.slug}`"
-            class="block rounded-[18px] border border-[var(--line-soft)] bg-white px-4 py-4 transition hover:border-[rgba(76,139,245,0.22)]"
+            class="block rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card)] px-4 py-4 transition hover:border-[var(--line-accent-soft-hover)]"
           >
             <div class="flex items-center justify-between gap-3">
               <span class="text-sm font-medium text-[var(--text-1)]">{{ category.name }}</span>

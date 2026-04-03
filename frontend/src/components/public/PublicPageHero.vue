@@ -35,7 +35,7 @@ defineProps<{
         </p>
 
         <div v-if="meta?.length" class="mt-6 flex flex-wrap gap-3 text-sm text-[var(--text-3)]">
-          <span v-for="item in meta" :key="item" class="ui-badge bg-white">{{ item }}</span>
+          <span v-for="item in meta" :key="item" class="ui-badge bg-[var(--bg-card)]">{{ item }}</span>
         </div>
 
         <div v-if="actions?.length" class="mt-7 flex flex-wrap gap-3">
@@ -55,7 +55,7 @@ defineProps<{
         </div>
       </div>
 
-      <div v-if="asideTitle || asideText || asideStats?.length" class="rounded-[26px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f8fbff)] p-5 shadow-[var(--shadow-xs)]">
+      <div v-if="asideTitle || asideText || asideStats?.length" class="rounded-[26px] border border-[var(--line-soft)] bg-[var(--bg-gradient-card-hero)] p-5 shadow-[var(--shadow-xs)]">
         <p class="editor-kicker">页面概览</p>
         <h3 v-if="asideTitle" class="mt-3 text-[20px] text-[var(--text-1)] font-semibold tracking-[-0.03em]">
           {{ asideTitle }}
@@ -68,7 +68,7 @@ defineProps<{
           <div
             v-for="item in asideStats"
             :key="item.label"
-            class="rounded-[20px] border border-[var(--line-soft)] bg-white p-4"
+            class="rounded-[20px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-4"
           >
             <p class="text-xs text-[var(--text-3)]">{{ item.label }}</p>
             <p class="mt-2 text-[28px] font-semibold text-[var(--text-1)]">{{ item.value }}</p>

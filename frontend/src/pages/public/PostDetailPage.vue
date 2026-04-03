@@ -192,7 +192,7 @@ watch(
       </p>
     </section>
 
-    <section v-else-if="errorMessage" class="panel-surface rounded-[28px] border-[rgba(240,68,56,0.14)] bg-[linear-gradient(180deg,#fff7f6,#ffffff)] p-8">
+    <section v-else-if="errorMessage" class="panel-surface rounded-[28px] border-[var(--line-danger-panel)] bg-[var(--bg-gradient-card-error)] p-8">
       <p class="editor-kicker text-[var(--danger)]">
         文章不存在
       </p>
@@ -210,7 +210,7 @@ watch(
 
     <template v-else-if="currentPost">
       <section class="panel-surface overflow-hidden rounded-[32px]">
-        <div class="border-b border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-6 py-8 md:px-8 md:py-10">
+        <div class="border-b border-[var(--line-soft)] bg-[var(--bg-home-hero-side)] px-6 py-8 md:px-8 md:py-10">
           <div class="max-w-5xl">
             <p class="editor-kicker">Article / Technical Longform</p>
             <h2 class="editor-title mt-4 text-[34px] leading-[1.12] md:text-[46px] lg:text-[54px]">
@@ -224,7 +224,7 @@ watch(
               <RouterLink
                 v-if="currentPost.category"
                 :to="`/categories/${currentPost.category.slug}`"
-                class="ui-badge border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary-strong)]"
+                class="ui-badge border-[var(--line-accent-soft)] bg-[var(--accent-primary-soft)] text-[var(--accent-primary-strong)]"
               >
                 {{ currentPost.category.name }}
               </RouterLink>
@@ -249,7 +249,7 @@ watch(
         </div>
 
         <div class="grid gap-6 px-6 py-6 md:px-8 lg:grid-cols-[minmax(0,780px)_minmax(260px,1fr)] lg:items-start lg:justify-between">
-          <article class="article-prose rounded-[24px] border border-[var(--line-soft)] bg-white p-6 md:p-8">
+          <article class="article-prose rounded-[24px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-6 md:p-8">
             <div v-html="renderedContent" />
           </article>
 
@@ -365,7 +365,7 @@ watch(
                 <article
                   v-for="reply in comment.replies"
                   :key="reply.id"
-                  class="rounded-[18px] border border-[var(--line-soft)] bg-white p-4"
+                  class="rounded-[18px] border border-[var(--line-soft)] bg-[var(--bg-card)] p-4"
                 >
                   <div class="flex flex-wrap items-center gap-2">
                     <a
@@ -402,7 +402,7 @@ watch(
             提交后评论默认进入审核状态；昵称和内容为必填项，邮箱与个人网站可选。
           </p>
 
-          <div v-if="replyingTo" class="mt-5 rounded-[20px] border border-[rgba(76,139,245,0.18)] bg-[var(--accent-primary-soft)] p-4 text-sm text-[var(--accent-primary)] leading-7">
+          <div v-if="replyingTo" class="mt-5 rounded-[20px] border border-[var(--line-accent-soft)] bg-[var(--accent-primary-soft)] p-4 text-sm text-[var(--accent-primary-strong)] leading-7">
             <p>
               正在回复：<span class="font-semibold">{{ replyingTo.authorName }}</span>
             </p>
@@ -414,11 +414,11 @@ watch(
             </button>
           </div>
 
-          <div v-if="commentSuccessMessage" class="mt-5 rounded-[20px] border border-[rgba(18,183,106,0.16)] bg-[var(--success-soft)] p-4 text-sm text-[var(--success)] leading-7">
+          <div v-if="commentSuccessMessage" class="mt-5 rounded-[20px] border border-[var(--line-success-panel)] bg-[var(--success-soft)] p-4 text-sm text-[var(--success)] leading-7">
             {{ commentSuccessMessage }}
           </div>
 
-          <div v-if="commentErrorMessage" class="mt-5 rounded-[20px] border border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)] leading-7">
+          <div v-if="commentErrorMessage" class="mt-5 rounded-[20px] border border-[var(--line-danger-panel)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)] leading-7">
             {{ commentErrorMessage }}
           </div>
 

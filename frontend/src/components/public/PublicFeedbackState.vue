@@ -16,12 +16,12 @@ defineProps<{
 const stateToneMap = {
   loading: {
     kicker: '加载中',
-    cardClass: 'border-dashed border-[var(--line-soft)] bg-[linear-gradient(180deg,#fcfdff,#f7faff)] text-[var(--text-3)]',
+    cardClass: 'border-dashed border-[var(--line-soft)] bg-[var(--bg-gradient-card-soft)] text-[var(--text-3)]',
     dotClass: 'bg-[var(--info)]',
   },
   error: {
     kicker: '发生错误',
-    cardClass: 'border-[rgba(240,68,56,0.14)] bg-[var(--danger-soft)] text-[var(--danger)]',
+    cardClass: 'border-[var(--line-danger-panel)] bg-[var(--danger-soft)] text-[var(--danger)]',
     dotClass: 'bg-[var(--danger)]',
   },
   empty: {

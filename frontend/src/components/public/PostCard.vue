@@ -17,8 +17,8 @@ const isFeatured = computed(() => Boolean(props.featured || props.post.featured)
   <article
     class="group overflow-hidden rounded-[26px] border transition duration-200"
     :class="isFeatured
-      ? 'border-[rgba(76,139,245,0.16)] bg-[linear-gradient(135deg,#ffffff,#f8fbff)] shadow-[var(--shadow-sm)]'
-      : 'border-[var(--line-soft)] bg-white hover:-translate-y-[2px] hover:border-[rgba(76,139,245,0.22)] hover:shadow-[var(--shadow-sm)]'
+      ? 'border-[var(--line-accent-soft)] bg-[var(--bg-gradient-card-featured)] shadow-[var(--shadow-sm)]'
+      : 'border-[var(--line-soft)] bg-[var(--bg-card)] hover:-translate-y-[2px] hover:border-[var(--line-accent-soft-hover)] hover:shadow-[var(--shadow-sm)]'
     "
   >
     <div class="grid gap-5 p-6" :class="isFeatured ? 'lg:grid-cols-[minmax(0,1.3fr)_280px] lg:items-end' : ''">
@@ -50,7 +50,7 @@ const isFeatured = computed(() => Boolean(props.featured || props.post.featured)
         </div>
       </div>
 
-      <div class="flex flex-col justify-between gap-5 rounded-[22px] border border-[var(--line-soft)] bg-[linear-gradient(180deg,#ffffff,#f9fbfe)] p-5">
+      <div class="flex flex-col justify-between gap-5 rounded-[22px] border border-[var(--line-soft)] bg-[var(--bg-gradient-card-hero)] p-5">
         <div>
           <p class="editor-kicker">文章档案</p>
           <p class="mt-3 text-sm text-[var(--text-2)] leading-7">
