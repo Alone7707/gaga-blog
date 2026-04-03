@@ -43,8 +43,14 @@ async function loadHomeData() {
     categories.value = categoryResponse.list.filter((item) => (item.postCount ?? 0) > 0)
     tags.value = tagResponse.list.filter((item) => (item.postCount ?? 0) > 0)
     siteOverview.value = overviewResponse
+
+    const siteTitle = overviewResponse.site.title?.trim() || '开源博客'
+    document.title = `${siteTitle} · 首页`
   }
   catch (error) {
+    visiblePosts.value = []
+    categories.value = []
+    tags.value = []
     siteOverview.value = null
     errorMessage.value = error instanceof Error ? error.message : '首页数据加载失败'
   }

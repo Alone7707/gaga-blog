@@ -69,6 +69,7 @@ async function loadAboutPage() {
   catch (error) {
     page.value = null
     overview.value = null
+    document.title = '关于 · 开源博客产品'
     errorMessage.value = error instanceof Error ? error.message : '关于页加载失败'
   }
   finally {

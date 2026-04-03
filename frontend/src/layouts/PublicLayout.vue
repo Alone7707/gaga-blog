@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import { getPublicSiteOverview } from '../api/site'
@@ -8,6 +8,20 @@ import type { PublicSiteOverview } from '../types/site'
 
 const route = useRoute()
 const siteOverview = ref<PublicSiteOverview | null>(null)
+
+const siteHeaderTitle = computed(
+  () => siteOverview.value?.site.title?.trim() || '更轻的内容首页，更清晰的阅读入口，更克制的视觉层级。',
+)
+const siteHeaderSubtitle = computed(
+  () => siteOverview.value?.site.subtitle?.trim() || 'Open Source Blog / Fresh Content Product',
+)
+const siteHeaderDescription = computed(
+  () => siteOverview.value?.site.description?.trim() || '前台回到现代内容产品的阅读气质：以文章为中心，以分类与搜索承接流量，不再延续厚重深色、重玻璃、重发光的旧风格。',
+)
+const siteFooterText = computed(
+  () => siteOverview.value?.site.footerText?.trim() || '© 2026 开源博客产品 · 清爽版第一轮界面改版',
+)
+const siteIcp = computed(() => siteOverview.value?.site.icp?.trim() || '')
 
 function applySiteMeta(overview: PublicSiteOverview | null) {
   const faviconUrl = overview?.site.faviconUrl?.trim()
@@ -61,13 +75,13 @@ onMounted(() => {
         <div class="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div class="max-w-3xl">
             <p class="editor-kicker">
-              {{ siteOverview?.site.subtitle?.trim() || 'Open Source Blog / Fresh Content Product' }}
+              {{ siteHeaderSubtitle }}
             </p>
             <h1 class="editor-title mt-4 text-[36px] leading-[1.08] md:text-[48px] lg:text-[56px]">
-              {{ siteOverview?.site.title?.trim() || '更轻的内容首页，更清晰的阅读入口，更克制的视觉层级。' }}
+              {{ siteHeaderTitle }}
             </h1>
             <p class="mt-5 max-w-2xl text-sm text-[var(--text-3)] leading-7 md:text-[16px]">
-              {{ siteOverview?.site.description?.trim() || '前台回到现代内容产品的阅读气质：以文章为中心，以分类与搜索承接流量，不再延续厚重深色、重玻璃、重发光的旧风格。' }}
+              {{ siteHeaderDescription }}
             </p>
           </div>
 
@@ -101,8 +115,8 @@ onMounted(() => {
 
       <footer class="mt-10 flex flex-col gap-3 border-t border-[var(--line-soft)] px-1 pt-6 text-sm text-[var(--text-4)] md:flex-row md:items-center md:justify-between">
         <p>
-          {{ siteOverview?.site.footerText?.trim() || '© 2026 开源博客产品 · 清爽版第一轮界面改版' }}
-          <span v-if="siteOverview?.site.icp?.trim()"> · {{ siteOverview.site.icp }}</span>
+          {{ siteFooterText }}
+          <span v-if="siteIcp"> · {{ siteIcp }}</span>
         </p>
         <p class="editor-mono">Vue 3 / Vite / UnoCSS / Pinia / Vue Router</p>
       </footer>

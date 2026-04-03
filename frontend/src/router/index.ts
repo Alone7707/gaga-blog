@@ -256,5 +256,11 @@ export function createRouter() {
 // 根据路由元信息更新页面标题，避免页面标题缺失。
 function updateDocumentTitle(route: RouteLocationNormalized) {
   const pageTitle = typeof route.meta.title === 'string' ? route.meta.title : '开源博客'
+
+  if (route.name === 'home') {
+    document.title = '首页 · 开源博客产品'
+    return
+  }
+
   document.title = `${pageTitle} · 开源博客产品`
 }
