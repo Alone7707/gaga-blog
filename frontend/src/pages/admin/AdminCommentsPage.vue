@@ -98,8 +98,13 @@ const selectedStatusLabel = computed(() => {
 })
 
 onMounted(() => {
-  void Promise.all([loadCommentStats(), loadComments(1)])
+  void refreshComments()
 })
+
+// 统一刷新评论统计与评论列表，避免模板内联 Promise 影响类型推断。
+async function refreshComments() {
+  await Promise.all([loadCommentStats(), loadComments(pagination.page)])
+}
 
 // 拉取后台评论统计，优先展示审核池概况，方便运营确认处理优先级。
 async function loadCommentStats() {
@@ -391,7 +396,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
             type="button"
             class="inline-flex items-center rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="listLoading || statsLoading"
-            @click="Promise.all([loadCommentStats(), loadComments(pagination.page)])"
+            @click="refreshComments"
           >
             刷新评论
           </button>

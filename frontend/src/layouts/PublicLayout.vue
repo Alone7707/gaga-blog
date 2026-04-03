@@ -1,50 +1,57 @@
-﻿<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+<script setup lang="ts">
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import { publicNavigation } from '../constants/navigation'
+
+const route = useRoute()
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#07111f] text-slate-100">
-    <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_35%),radial-gradient(circle_at_right,_rgba(96,165,250,0.14),_transparent_30%)]" />
-    <div class="relative mx-auto max-w-7xl px-6 pb-10 pt-6 lg:px-8">
-      <header class="mb-10 flex flex-col gap-6 rounded-8 border border-white/10 bg-white/5 px-6 py-5 backdrop-blur-md md:flex-row md:items-center md:justify-between">
-        <div>
-          <p class="text-sm uppercase tracking-[0.32em] text-cyan-300/80">
-            Open Source Blog
-          </p>
-          <h1 class="mt-3 text-3xl font-semibold tracking-wide text-white md:text-4xl">
-            开源博客产品
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm text-slate-300 leading-7 md:text-base">
-            以个人开发者为核心场景的博客系统。当前阶段先落地前台阅读壳层与后台管理骨架，后续逐步接入真实内容与运营能力。
-          </p>
+  <div class="app-shell overflow-hidden bg-[var(--bg-0)] text-[var(--text-2)]">
+    <div class="relative mx-auto max-w-[1360px] px-5 pb-10 pt-6 lg:px-8 lg:pt-8">
+      <header class="panel-surface mb-8 rounded-[28px] px-6 py-6 md:px-8 md:py-7">
+        <div class="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
+          <div class="max-w-3xl">
+            <p class="editor-kicker">Open Source Blog / Technical Editorial Desk</p>
+            <h1 class="editor-title mt-4 text-[36px] leading-[1.08] md:text-[48px] lg:text-[56px]">
+              像技术编辑部一样组织内容，像深夜控制台一样保持秩序。
+            </h1>
+            <p class="mt-5 max-w-2xl text-sm text-[var(--text-3)] leading-7 md:text-[16px]">
+              面向开发者的开源博客产品。前台强调长文阅读与主题归档，后台强调内容编排与运营判断，两端共享同一套深色冷静的设计语言。
+            </p>
+          </div>
+
+          <div class="flex w-full max-w-[420px] flex-col gap-4 xl:items-end">
+            <nav class="flex flex-wrap gap-2 xl:justify-end">
+              <RouterLink
+                v-for="item in publicNavigation"
+                :key="item.to"
+                :to="item.to"
+                class="ui-btn min-h-[38px] px-4 text-sm"
+                :class="route.path === item.to ? 'ui-btn-ghost' : 'ui-btn-secondary'"
+              >
+                {{ item.label }}
+              </RouterLink>
+            </nav>
+            <div class="flex flex-wrap gap-3 xl:justify-end">
+              <RouterLink to="/search" class="ui-btn ui-btn-secondary text-sm">
+                站内搜索
+              </RouterLink>
+              <RouterLink to="/admin/login" class="ui-btn ui-btn-primary text-sm">
+                进入后台
+              </RouterLink>
+            </div>
+          </div>
         </div>
-        <nav class="flex flex-wrap items-center gap-3">
-          <RouterLink
-            v-for="item in publicNavigation"
-            :key="item.to"
-            :to="item.to"
-            class="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/50 hover:text-white"
-          >
-            {{ item.label }}
-          </RouterLink>
-          <RouterLink
-            to="/admin/login"
-            class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300"
-          >
-            进入后台
-          </RouterLink>
-        </nav>
       </header>
 
       <main>
         <RouterView />
       </main>
 
-      <footer class="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
-        <p>© 2026 开源博客产品 · 前台布局骨架</p>
-        <p>技术栈：Vue 3 + Vite + Vue Router + Pinia + UnoCSS</p>
+      <footer class="mt-10 flex flex-col gap-3 border-t border-white/8 px-1 pt-6 text-sm text-[var(--text-4)] md:flex-row md:items-center md:justify-between">
+        <p>© 2026 开源博客产品 · 技术编辑部风格第一轮界面改版</p>
+        <p class="editor-mono">Vue 3 / Vite / UnoCSS / Pinia / Vue Router</p>
       </footer>
     </div>
   </div>

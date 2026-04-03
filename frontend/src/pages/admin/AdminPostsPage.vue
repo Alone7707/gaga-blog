@@ -35,12 +35,16 @@ const pagination = reactive({
 
 const totalLabel = computed(() => `共 ${pagination.total} 篇文章`)
 const hasData = computed(() => posts.value.length > 0)
+const publishedCount = computed(() => posts.value.filter((post) => post.status === 'PUBLISHED').length)
+const draftCount = computed(() => posts.value.filter((post) => post.status === 'DRAFT').length)
+const archivedCount = computed(() => posts.value.filter((post) => post.status === 'ARCHIVED').length)
+const latestUpdatedAt = computed(() => posts.value[0]?.updatedAt ?? null)
 
 onMounted(() => {
   loadPosts()
 })
 
-// 拉取后台文章列表，优先走真实接口，失败时直接反馈联调问题。
+// 文章管理页优先保证真实列表、筛选与分页可用，再重组为更像工作台的界面。
 async function loadPosts(page = pagination.page) {
   loading.value = true
   errorMessage.value = ''
@@ -71,7 +75,6 @@ async function loadPosts(page = pagination.page) {
   }
 }
 
-// 搜索与状态筛选当前以最小能力提供，后续可以继续补分类筛选与排序。
 function handleSearch() {
   void loadPosts(1)
 }
@@ -104,14 +107,14 @@ function getStatusLabel(status: PostStatus) {
 
 function getStatusClass(status: PostStatus) {
   if (status === 'PUBLISHED') {
-    return 'border-emerald-400/25 bg-emerald-500/10 text-emerald-200'
+    return 'ui-badge ui-badge-status-published'
   }
 
   if (status === 'ARCHIVED') {
-    return 'border-amber-400/25 bg-amber-500/10 text-amber-200'
+    return 'ui-badge ui-badge-status-archived'
   }
 
-  return 'border-slate-400/20 bg-slate-500/10 text-slate-200'
+  return 'ui-badge ui-badge-status-draft'
 }
 
 function formatDateTime(value: string | null) {
@@ -148,156 +151,150 @@ function resolveErrorMessage(error: unknown) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <SectionCard title="文章管理" description="面向后台高频内容管理场景，当前先交付文章列表、基础筛选和新建/编辑入口。">
+  <div class="page-grid">
+    <SectionCard
+      title="文章管理"
+      description="后台最核心的工作页。首轮只保留最常用的能力：看清状态、快速筛选、进入编辑与预览。"
+      variant="hero"
+      size="lg"
+    >
       <template #action>
-        <RouterLink
-          to="/admin/posts/new"
-          class="inline-flex items-center rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300"
-        >
+        <RouterLink to="/admin/posts/new" class="ui-btn ui-btn-primary text-sm">
           新建文章
         </RouterLink>
       </template>
 
-      <div class="flex flex-col gap-4 rounded-6 border border-white/8 bg-slate-950/35 p-4 lg:flex-row lg:items-end lg:justify-between">
-        <div class="grid flex-1 gap-4 md:grid-cols-[minmax(0,1.6fr)_220px]">
+      <div class="grid gap-4 xl:grid-cols-4">
+        <article class="rounded-[22px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(12,27,41,0.96),rgba(7,17,28,0.92))] p-5">
+          <p class="editor-kicker">文章总量</p>
+          <p class="mt-4 text-[38px] text-white font-semibold">{{ pagination.total }}</p>
+          <p class="mt-3 text-xs text-cyan-200/80">覆盖当前筛选条件下的内容范围</p>
+        </article>
+        <article class="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,22,35,0.92),rgba(9,16,28,0.88))] p-5">
+          <p class="editor-kicker">草稿</p>
+          <p class="mt-4 text-[38px] text-white font-semibold">{{ draftCount }}</p>
+          <p class="mt-3 text-xs text-slate-400">仍需编辑或待发布的文章</p>
+        </article>
+        <article class="rounded-[22px] border border-emerald-400/14 bg-[linear-gradient(180deg,rgba(10,28,28,0.96),rgba(8,17,26,0.92))] p-5">
+          <p class="editor-kicker">已发布</p>
+          <p class="mt-4 text-[38px] text-white font-semibold">{{ publishedCount }}</p>
+          <p class="mt-3 text-xs text-emerald-200/80">当前对外可见的公开内容</p>
+        </article>
+        <article class="rounded-[22px] border border-amber-400/14 bg-[linear-gradient(180deg,rgba(33,24,12,0.96),rgba(13,16,24,0.92))] p-5">
+          <p class="editor-kicker">最近更新</p>
+          <p class="mt-4 text-base text-white font-semibold leading-7">
+            {{ formatDateTime(latestUpdatedAt) }}
+          </p>
+          <p class="mt-3 text-xs text-amber-200/80">已归档 {{ archivedCount }} 篇</p>
+        </article>
+      </div>
+
+      <div class="mt-6 rounded-[24px] border border-white/8 bg-black/16 p-4 md:p-5">
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_220px_auto] xl:items-end">
           <label class="block">
             <span class="mb-2 block text-sm text-slate-300">搜索文章</span>
             <input
               v-model="queryForm.keyword"
               type="text"
               placeholder="输入标题、slug 或摘要关键词"
-              class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70"
+              class="ui-input"
               @keyup.enter="handleSearch"
             >
           </label>
 
           <label class="block">
             <span class="mb-2 block text-sm text-slate-300">状态筛选</span>
-            <select
-              v-model="queryForm.status"
-              class="w-full rounded-4 border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/70"
-            >
-              <option
-                v-for="option in statusOptions"
-                :key="option.value || 'all'"
-                :value="option.value"
-              >
+            <select v-model="queryForm.status" class="ui-select">
+              <option v-for="option in statusOptions" :key="option.value || 'all'" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
           </label>
+
+          <div class="flex flex-wrap gap-3 xl:justify-end">
+            <button type="button" class="ui-btn ui-btn-secondary text-sm" @click="handleReset">
+              重置
+            </button>
+            <button type="button" class="ui-btn ui-btn-primary text-sm" @click="handleSearch">
+              查询
+            </button>
+          </div>
         </div>
 
-        <div class="flex flex-wrap gap-3">
-          <button
-            type="button"
-            class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white"
-            @click="handleReset"
-          >
-            重置
-          </button>
-          <button
-            type="button"
-            class="rounded-full bg-cyan-400 px-4 py-2 text-sm text-slate-950 font-semibold transition hover:bg-cyan-300"
-            @click="handleSearch"
-          >
-            查询
-          </button>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+          <div class="flex flex-wrap items-center gap-3">
+            <span>{{ totalLabel }}</span>
+            <span class="ui-badge">分类筛选下一轮再接入</span>
+            <span class="ui-badge">批量操作位已预留到列表动作区</span>
+          </div>
+          <p class="editor-mono">默认按最近更新时间倒序展示</p>
         </div>
       </div>
+    </SectionCard>
 
-      <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
-        <div class="flex flex-wrap items-center gap-3">
-          <span>{{ totalLabel }}</span>
-          <span class="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-            分类筛选占位：待分类模块接入后补充
-          </span>
-        </div>
-        <p>默认按最近更新时间倒序展示</p>
+    <SectionCard title="文章列表" description="标题作为主视觉，状态、分类、更新时间围绕它组织。" variant="panel">
+      <div v-if="loading" class="rounded-[20px] border border-white/8 bg-black/16 px-5 py-14 text-center text-sm text-slate-300">
+        正在加载文章列表...
       </div>
 
-      <div class="mt-5 overflow-hidden rounded-6 border border-white/8 bg-slate-950/30">
-        <div v-if="loading" class="px-5 py-14 text-center text-sm text-slate-300">
-          正在加载文章列表...
-        </div>
+      <div v-else-if="errorMessage" class="rounded-[20px] border border-rose-400/20 bg-rose-500/10 px-5 py-10">
+        <p class="text-sm text-rose-200">
+          {{ errorMessage }}
+        </p>
+      </div>
 
-        <div v-else-if="errorMessage" class="px-5 py-10">
-          <p class="rounded-4 border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-            {{ errorMessage }}
-          </p>
-        </div>
+      <div v-else-if="!hasData" class="rounded-[20px] border border-dashed border-white/10 bg-black/16 px-5 py-14 text-center text-sm text-slate-300">
+        当前暂无符合条件的文章，可以先新建一篇内容。
+      </div>
 
-        <div v-else-if="!hasData" class="px-5 py-14 text-center text-sm text-slate-300">
-          当前暂无符合条件的文章，可以先新建一篇内容。
-        </div>
-
-        <table v-else class="min-w-full border-collapse text-sm">
-          <thead class="bg-white/5 text-left text-slate-300">
-            <tr>
-              <th class="px-5 py-4 font-medium">标题</th>
-              <th class="px-5 py-4 font-medium">状态</th>
-              <th class="px-5 py-4 font-medium">分类</th>
-              <th class="px-5 py-4 font-medium">标签数</th>
-              <th class="px-5 py-4 font-medium">更新时间</th>
-              <th class="px-5 py-4 font-medium">发布时间</th>
-              <th class="px-5 py-4 font-medium text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="post in posts"
-              :key="post.id"
-              class="border-t border-white/6 transition hover:bg-white/4"
-            >
-              <td class="px-5 py-4 align-top">
-                <div class="space-y-2">
-                  <div class="text-sm text-white font-medium leading-6">
-                    {{ post.title }}
-                  </div>
-                  <p class="text-xs text-slate-400">/{{ post.slug }}</p>
-                  <p class="line-clamp-2 text-xs text-slate-400 leading-6">
-                    {{ post.summary || '暂无摘要，后续可在编辑页补充。' }}
-                  </p>
-                </div>
-              </td>
-              <td class="px-5 py-4 align-top">
-                <span class="inline-flex rounded-full border px-3 py-1 text-xs" :class="getStatusClass(post.status)">
+      <div v-else class="space-y-4">
+        <article
+          v-for="post in posts"
+          :key="post.id"
+          class="rounded-[22px] border border-white/8 bg-black/16 p-5 transition hover:border-cyan-300/18 hover:bg-white/4"
+        >
+          <div class="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_180px_180px_220px] xl:items-start">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="truncate text-[18px] text-white font-semibold leading-7">{{ post.title }}</h3>
+                <span :class="getStatusClass(post.status)">
                   {{ getStatusLabel(post.status) }}
                 </span>
-              </td>
-              <td class="px-5 py-4 align-top text-slate-300">
-                {{ post.category?.name || '未分类' }}
-              </td>
-              <td class="px-5 py-4 align-top text-slate-300">
-                {{ post.counts.tags }} 个标签 / {{ post.counts.comments }} 条评论
-              </td>
-              <td class="px-5 py-4 align-top text-slate-300">
-                {{ formatDateTime(post.updatedAt) }}
-              </td>
-              <td class="px-5 py-4 align-top text-slate-300">
-                {{ formatDateTime(post.publishedAt) }}
-              </td>
-              <td class="px-5 py-4 align-top text-right">
-                <div class="inline-flex flex-wrap justify-end gap-2">
-                  <RouterLink
-                    :to="`/admin/posts/${post.id}/edit`"
-                    class="rounded-full border border-white/12 px-3 py-1.5 text-xs text-slate-200 transition hover:border-cyan-300/40 hover:text-white"
-                  >
-                    编辑
-                  </RouterLink>
-                  <RouterLink
-                    :to="`/posts/${post.slug}`"
-                    target="_blank"
-                    class="rounded-full border border-white/12 px-3 py-1.5 text-xs text-slate-200 transition hover:border-cyan-300/40 hover:text-white"
-                  >
-                    预览
-                  </RouterLink>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+              <p class="mt-2 text-xs text-slate-500 editor-mono">/{{ post.slug }}</p>
+              <p class="mt-3 line-clamp-2 text-sm text-slate-300 leading-7">
+                {{ post.summary || '暂无摘要，后续可在编辑页补充。' }}
+              </p>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-slate-400">
+                <span class="ui-badge">分类：{{ post.category?.name || '未分类' }}</span>
+                <span class="ui-badge">标签 {{ post.counts.tags }}</span>
+                <span class="ui-badge">评论 {{ post.counts.comments }}</span>
+              </div>
+            </div>
+
+            <div class="text-sm text-slate-300 leading-7">
+              <p class="text-xs uppercase tracking-[0.16em] text-slate-500">更新时间</p>
+              <p class="mt-2 editor-mono">{{ formatDateTime(post.updatedAt) }}</p>
+            </div>
+
+            <div class="text-sm text-slate-300 leading-7">
+              <p class="text-xs uppercase tracking-[0.16em] text-slate-500">发布时间</p>
+              <p class="mt-2 editor-mono">{{ formatDateTime(post.publishedAt) }}</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 xl:justify-end">
+              <RouterLink :to="`/admin/posts/${post.id}/edit`" class="ui-btn ui-btn-primary min-h-[38px] px-4 text-sm">
+                编辑
+              </RouterLink>
+              <RouterLink :to="`/posts/${post.slug}`" target="_blank" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm">
+                预览
+              </RouterLink>
+              <button type="button" class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm" disabled>
+                批量位预留
+              </button>
+            </div>
+          </div>
+        </article>
       </div>
 
       <div class="mt-5 flex flex-col gap-3 border-t border-white/8 pt-5 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
@@ -305,7 +302,7 @@ function resolveErrorMessage(error: unknown) {
         <div class="flex items-center gap-3">
           <button
             type="button"
-            class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm"
             :disabled="pagination.page <= 1"
             @click="handlePageChange(pagination.page - 1)"
           >
@@ -313,7 +310,7 @@ function resolveErrorMessage(error: unknown) {
           </button>
           <button
             type="button"
-            class="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            class="ui-btn ui-btn-secondary min-h-[38px] px-4 text-sm"
             :disabled="pagination.page >= Math.max(pagination.totalPages, 1)"
             @click="handlePageChange(pagination.page + 1)"
           >
