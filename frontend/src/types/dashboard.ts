@@ -34,7 +34,7 @@ export interface AdminDashboardRecentCommentItem {
   id: string
   postId: string
   authorName: string
-  authorEmail: string
+  authorEmail: string | null
   content: string
   status: AdminDashboardCommentStatus
   createdAt: string

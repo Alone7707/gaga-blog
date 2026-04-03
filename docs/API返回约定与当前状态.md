@@ -193,6 +193,7 @@
 - `GET /api/public/categories/:slug/posts`
 - `GET /api/public/tags/:slug/posts`
 - `GET /api/public/search`
+- `GET /api/public/archives`
 
 ### 后台接口
 
@@ -462,7 +463,13 @@ data 结构：
       ]
     }
   ],
-  "total": 3
+  "total": 3,
+  "pagination": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 3,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -470,7 +477,8 @@ data 结构：
 
 - 当前按 `year -> months -> posts` 分桶
 - `posts` 项不含 author，但含 `category/tags`
-- 当前为**一次性全量返回**，尚未接入 `content.archivePageSize`
+- 当前已支持分页，分页大小优先读取后台设置 `content.archivePageSize`
+- 前端 `frontend/src/api/public.ts` 已兼容旧回包，联调期即使缺少 `pagination` 也不会导致页面空白
 
 ## 4.9 公开评论列表 `GET /api/public/posts/:slug/comments`
 
@@ -657,7 +665,7 @@ data 结构：
 
 - 这是**直接对象返回**，没有 `overview` 包裹
 - `recentPosts` / `recentComments` 为后台首页最近动态
-- `recentComments.authorEmail` 在后端可为空，但前端类型当前写成了 `string`，这里存在轻微类型偏差，建议后续补齐为 `string | null`
+- `recentComments.authorEmail` 在后端与前端类型中均按 `string | null` 处理
 
 ## 5.2 后台文章列表 `GET /api/admin/posts`
 
@@ -804,6 +812,7 @@ data 结构：
 接口：
 
 - `GET /api/admin/comments/:id`
+- `POST /api/admin/comments/:id/reply`
 - `POST /api/admin/comments/:id/approve`
 - `POST /api/admin/comments/:id/reject`
 - `POST /api/admin/comments/:id/spam`
@@ -837,8 +846,10 @@ data 结构统一为：
 
 说明：
 
-- 当前后台具备审核能力，但**没有管理员直接回复能力**
+- `POST /api/admin/comments/:id/reply` 与详情/审核动作一样，统一返回 `{ comment }`
+- 管理员回复当前仅支持顶层评论，创建后默认进入 `APPROVED`，并出现在详情 `replies` 中
 - 评论不存在时抛出：`COMMENT_NOT_FOUND`
+- 对回复目标不合法时会抛出：`COMMENT_REPLY_TARGET_INVALID`
 
 ## 5.8 后台站点设置 `GET /api/admin/settings`
 
@@ -960,7 +971,7 @@ data 结构：
 - 公开分类文章列表：`list/pagination`
 - 公开标签文章列表：`list/pagination`
 - 公开搜索：`keyword/list/pagination`
-- 公开归档：`list/total`
+- 公开归档：`list/total/pagination`
 - 公开评论列表：`list`
 - 公开 site overview：`stats/latestPublishedPost`
 - 后台文章列表：`list/pagination`
